@@ -59,7 +59,7 @@ export const stringizing = (
 	const newPath = [...path, o];
 
 	if (Array.isArray(o)) {
-		return o.map((item) => stringizing(item, newPath));
+		return o.map(item => stringizing(item, newPath));
 	} else if (typeof o === 'object') {
 		const output: { [key: string]: MixedData<string> } = {};
 		for (const key in o) {
@@ -192,6 +192,39 @@ export const batchGenMessage = (
 	return payload;
 };
 
+export const genDeactivateMessage = (
+	stateIdx: number,
+	account: Account,
+	coordPubKey: PublicKey
+) => {
+	const messages = genMessageFactory(
+		stateIdx,
+		account.privKey,
+		[0n, 0n],
+		coordPubKey
+	)(1n, 0, 0, 0, false);
+
+	// const payload: { msg: bigint[]; encPubkeys: PublicKey }[] = [];
+	// for (let i = plan.length - 1; i >= 0; i--) {
+	// 	const p = plan[i];
+	// 	const encAccount = genKeypair();
+	// 	const msg = genMessage(
+	// 		encAccount.privKey,
+	// 		i + 1,
+	// 		p[0],
+	// 		p[1],
+	// 		i === plan.length - 1
+	// 	);
+
+	// 	payload.push({
+	// 		msg,
+	// 		encPubkeys: encAccount.pubKey,
+	// 	});
+	// }
+
+	return messages;
+};
+
 export const privateKeyFromTxt = (txt: string) => {
 	if (typeof txt !== 'string') {
 		return;
@@ -204,6 +237,6 @@ export const privateKeyFromTxt = (txt: string) => {
 	if (!keys || keys.length !== 4) {
 		return;
 	}
-	const priKey = poseidon(keys.map((k) => BigInt('0x' + k)));
+	const priKey = poseidon(keys.map(k => BigInt('0x' + k)));
 	return genKeypair(priKey % SNARK_FIELD_SIZE);
 };

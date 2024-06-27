@@ -28,6 +28,7 @@ import { bech32 } from 'bech32';
 import { Account, PublicKey, batchGenMessage } from './lib/circom';
 import { benchmarkTest } from './test';
 import { amacitest } from './macitest';
+import { amaciusertest } from './amaciusertest';
 
 type DelegatorData = {
 	id: number;
@@ -119,7 +120,8 @@ export async function batchSend(recipients: DelegatorData[]) {
 // }
 
 async function main() {
-	await amacitest();
+	await amaciusertest(100);
+	// await amacitest();
 }
 
 main();
