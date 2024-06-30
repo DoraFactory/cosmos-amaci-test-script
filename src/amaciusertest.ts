@@ -326,9 +326,12 @@ export async function randomSubmitDeactivateMsg(
 	maciAccount: Account,
 	coordPubKey: PublicKey
 ) {
+	let encAccount = genKeypair();
+
 	const messages = genDeactivateMessage(
 		stateIdx,
 		maciAccount,
+		encAccount,
 		coordPubKey
 	).map(message => {
 		return message.toString();
@@ -337,8 +340,8 @@ export async function randomSubmitDeactivateMsg(
 	try {
 		const result = await client.publishDeactivateMessage({
 			encPubKey: {
-				x: maciAccount.pubKey[0].toString(),
-				y: maciAccount.pubKey[1].toString(),
+				x: encAccount.pubKey[0].toString(),
+				y: encAccount.pubKey[1].toString(),
 			},
 			message: {
 				data: messages as [

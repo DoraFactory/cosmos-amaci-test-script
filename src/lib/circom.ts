@@ -195,6 +195,7 @@ export const batchGenMessage = (
 export const genDeactivateMessage = (
 	stateIdx: number,
 	account: Account,
+	encAccount: Account,
 	coordPubKey: PublicKey
 ) => {
 	const messages = genMessageFactory(
@@ -202,7 +203,7 @@ export const genDeactivateMessage = (
 		account.privKey,
 		[0n, 0n],
 		coordPubKey
-	)(1n, 0, 0, 0, false);
+	)(encAccount.privKey, 0, 0, 0, false);
 
 	// const payload: { msg: bigint[]; encPubkeys: PublicKey }[] = [];
 	// for (let i = plan.length - 1; i >= 0; i--) {
