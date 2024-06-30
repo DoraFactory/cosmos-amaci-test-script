@@ -254,7 +254,7 @@ export async function randomSubmitMsg(
 	address: string,
 	stateIdx: number,
 	maciAccount: Account,
-	coordPubKey: PublicKey = defaultCoordPubKey
+	coordPubKey: PublicKey
 ) {
 	/**
 	 * 随机给一个项目投若干票
@@ -300,9 +300,23 @@ export async function randomSubmitMsg(
 
 		console.log(stateIdx, `pub_msg hash ${result.transactionHash}`);
 		return result;
-	} catch (err: any) {
-		console.log(err);
-		// await delay(16000);
+	} catch (err) {
+		// 将 err 类型显式地转换为 Error
+		if (err instanceof Error) {
+			if (
+				err.message.includes(
+					'You might want to check later. There was a wait of 16 seconds.'
+				)
+			) {
+				console.log(err.message);
+				console.log('skip this error and waiting 16s.');
+				await delay(17000);
+			} else {
+				console.error('Unexpected error', err);
+
+				throw err;
+			}
+		}
 	}
 }
 
@@ -310,7 +324,7 @@ export async function randomSubmitDeactivateMsg(
 	client: MaciClient,
 	stateIdx: number,
 	maciAccount: Account,
-	coordPubKey: PublicKey = defaultCoordPubKey
+	coordPubKey: PublicKey
 ) {
 	const messages = genDeactivateMessage(
 		stateIdx,
@@ -339,10 +353,28 @@ export async function randomSubmitDeactivateMsg(
 			},
 		});
 
-		console.log(stateIdx, `pub_dmsg hash ${result.transactionHash}`);
+		console.log(
+			stateIdx,
+			`publish_deactivate_message hash ${result.transactionHash}`
+		);
 		return result;
-	} catch (err: any) {
-		console.log(err);
+	} catch (err) {
+		// 将 err 类型显式地转换为 Error
+		if (err instanceof Error) {
+			if (
+				err.message.includes(
+					'You might want to check later. There was a wait of 16 seconds.'
+				)
+			) {
+				console.log(err.message);
+				console.log('skip this error and waiting 16s.');
+				await delay(17000);
+			} else {
+				console.error('Unexpected error', err);
+
+				throw err;
+			}
+		}
 	}
 }
 
@@ -404,13 +436,7 @@ async function batch_amaci_test(
 
 		try {
 			const pubkeyContent = await readFile(pubkeyFilePath);
-			const pubkeyData: UserPubkeyData = JSON.parse(pubkeyContent!);
-
 			const logsContent = await readFile(logsFilePath);
-			const logsData: AMaciLogEntry[] = JSON.parse(logsContent!);
-
-			// operatorMaciClient.startVotingPeriod();
-			// await delay(16000);
 
 			let numSignUp = await operatorMaciClient.getNumSignUp();
 			console.log(`start num_sign_ups: ${numSignUp}`); // Expect 0
@@ -427,14 +453,10 @@ async function batch_amaci_test(
 			};
 
 			let user1_res = await user1MaciClient.signUp({ pubkey: pubkey0 });
-			console.log(user1_res.transactionHash);
-			await delay(500);
+			console.log(`user1 signup hash: ${user1_res.transactionHash}`);
 
 			let user2_res = await user2MaciClient.signUp({ pubkey: pubkey1 });
-			console.log(user2_res.transactionHash);
-			await delay(500);
-			numSignUp = await operatorMaciClient.getNumSignUp();
-			console.log(`after signup num_sign_ups: ${numSignUp}`); // Expect 0
+			console.log(`user1 signup hash: ${user2_res.transactionHash}`);
 
 			await randomSubmitDeactivateMsg(
 				user1MaciClient,
@@ -617,7 +639,7 @@ async function batch_amaci_test(
 			// 	await delay(500);
 			// }
 		} catch (error) {
-			console.error('Error reading files:', error);
+			console.error('Error start round:', error);
 		}
 	} else {
 		process.exit;
@@ -657,12 +679,9 @@ export async function amaciusertest(roundNum: number) {
 		let user1 = await generateAccount(i + 1);
 		let user2 = await generateAccount(i + 2);
 		// await delay(12000);
+		console.log(`---- Start Round: ${i / 3}----`);
 		console.log('operator pubkey:', operatorList[(i % 9) / 3]);
-		await batch_amaci_test(
-			operator,
-			user1,
-			user2,
-			operatorList[(i % 9) / 3]
-		);
+		batch_amaci_test(operator, user1, user2, operatorList[(i % 9) / 3]);
+		await delay(30000);
 	}
 }
