@@ -662,7 +662,7 @@ export async function amaciusertest(roundNum: number) {
 		signerList.push(signer);
 	}
 
-	// await batchSend(accountAddresslist);
+	await batchSend(accountAddresslist);
 	// let operatorList = [
 	// 	[
 	// 		'3557592161792765812904087712812111121909518311142005886657252371904276697771',
@@ -739,6 +739,10 @@ export async function amaciusertest(roundNum: number) {
 			'11048581935624647835736195311739172115754004932778122289679132355784317516809',
 			'15731940614192025540900167288242769542663911295555797437240493548522535631952',
 		],
+		[
+			'2891504614498776869467154425245373288851348740252435599308799055362528473932',
+			'15672171211893486372674117621272992482412968960695399299667525372908467871522',
+		],
 	];
 	for (let i = start; i <= thread; i += 3) {
 		let operator = await generateAccount(i);
@@ -751,7 +755,12 @@ export async function amaciusertest(roundNum: number) {
 				operatorList[(i % (operatorList.length * 3)) / 3]
 			}`
 		);
-		// batch_amaci_test(operator, user1, user2, operatorList[(i % (operatorList.length * 3)) / 3]);
+		await batch_amaci_test(
+			operator,
+			user1,
+			user2,
+			operatorList[(i % (operatorList.length * 3)) / 3]
+		);
 		// await delay(30000);
 	}
 }

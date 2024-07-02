@@ -120,7 +120,7 @@ export async function batchSend(recipients: DelegatorData[]) {
 // }
 
 async function main() {
-	await amaciusertest(100);
+	await amaciusertest(160);
 	// await amacitest();
 }
 
