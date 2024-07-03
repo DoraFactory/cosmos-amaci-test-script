@@ -418,14 +418,32 @@ async function batch_amaci_test(
 		BigInt(operatorPubkey[1]),
 	];
 	console.log('coordPubKey', coordPubKey);
-	contractAddress = await deployContract(
-		operatorClient,
-		operatorPubkey[0],
-		operatorPubkey[1],
-		operatorAddress,
-		start_voting,
-		end_voting
-	);
+	// try {
+	// 	contractAddress = await deployContract(
+	// 		operatorClient,
+	// 		operatorPubkey[0],
+	// 		operatorPubkey[1],
+	// 		operatorAddress,
+	// 		start_voting,
+	// 		end_voting
+	// 	);
+	// } catch {}
+
+	while (!contractAddress) {
+		try {
+			contractAddress = await deployContract(
+				operatorClient,
+				operatorPubkey[0],
+				operatorPubkey[1],
+				operatorAddress,
+				start_voting,
+				end_voting
+			);
+		} catch (error) {
+			console.log('Deploy failed, retrying...', error);
+			await delay(16000); // 延迟一段时间再重试
+		}
+	}
 	// } catch {
 	// 	console.log('deploy failed.');
 	// }
@@ -485,162 +503,6 @@ async function batch_amaci_test(
 				maciAccount2,
 				coordPubKey
 			);
-
-			// let pub_msg_res = await user1MaciClient.publishMessage({
-			// 	encPubKey: {
-			// 		x: maciAccount1.pubKey[0].toString(),
-			// 		y: maciAccount1.pubKey[1].toString(),
-			// 	},
-			// 	message: pubMsg,
-			// });
-
-			// console.log(`publish_message tx: ${pub_msg_res.transactionHash}`);
-
-			// for (let entry of logsData) {
-			// 	console.log(`---- ${contractAddress}: ${entry.type} ----`);
-			// 	switch (entry.type) {
-			// 		case 'publishDeactivateMessage':
-			// 			let deactivateData: PublishDeactivateMessageData =
-			// 				entry.data;
-
-			// 			let message: MessageData = {
-			// 				data: deactivateData.message,
-			// 			};
-
-			// 			let encPubKey: PubKey = {
-			// 				x: uint256FromDecimalString(
-			// 					deactivateData.encPubKey[0]
-			// 				),
-			// 				y: uint256FromDecimalString(
-			// 					deactivateData.encPubKey[1]
-			// 				),
-			// 			};
-
-			// 			let pub_dmsg_res =
-			// 				await user2MaciClient.publishDeactivateMessage({
-			// 					encPubKey,
-			// 					message,
-			// 				});
-			// 			console.log(
-			// 				`publish_deactiate_message tx: ${pub_dmsg_res.transactionHash}`
-			// 			);
-			// 			break;
-
-			// 		// case 'proofDeactivate':
-			// 		// 	let proofDeactivateData: ProofDeactivateData =
-			// 		// 		entry.data;
-
-			// 		// 	let size = uint256FromDecimalString(
-			// 		// 		proofDeactivateData.size
-			// 		// 	);
-			// 		// 	let newDeactivateCommitment = uint256FromDecimalString(
-			// 		// 		proofDeactivateData.newDeactivateCommitment
-			// 		// 	);
-			// 		// 	let newDeactivateRoot = uint256FromDecimalString(
-			// 		// 		proofDeactivateData.newDeactivateRoot
-			// 		// 	);
-			// 		// 	let dMsgProof = {
-			// 		// 		a: '07eb1d9b0b358b2e4fe5e051bfd67aa3e57e2ab2f64f10e35d396ffd250b43e50433ae33cf1f829a23b7f326d8d2e4ff947c6f9778b788cf98336a6596ca2d16',
-			// 		// 		b: '0178e65e73c8e868900a5b439ac9c9f4c5dd7b1648b1f62bd5515a570fbf35a910fe35a737af956348436c2c62f046a08f35c0c7249bdaee25821122d1e3e11805f57494d28352120e88d1f75f560b3f15bea5af48d07e942df098b3e1aa95ff0a2541ae1aec50d71f30d01be5cd3d8a9d86ead1f190fb7d4c723bdcf9b11a51',
-			// 		// 		c: '1e146ab4c5b7388f8207d8e00c8d44d63786eb9a2deb07674b9e47ecb263541b22109d09c11658954333b6e62dacca8a72c088ddd8ab633765bc46bf88e97cd8',
-			// 		// 	};
-
-			// 		// 	console.log(
-			// 		// 		'process_deactivate_message proof',
-			// 		// 		dMsgProof
-			// 		// 	);
-			// 		// 	console.log(
-			// 		// 		'process_deactivate_message new commitment',
-			// 		// 		newDeactivateCommitment
-			// 		// 	);
-			// 		// 	console.log(
-			// 		// 		'process_deactivate_message new root',
-			// 		// 		newDeactivateRoot
-			// 		// 	);
-
-			// 		// 	let process_dmsg_res =
-			// 		// 		await operatorMaciClient.processDeactivateMessage({
-			// 		// 			size,
-			// 		// 			newDeactivateCommitment,
-			// 		// 			newDeactivateRoot,
-			// 		// 			groth16Proof: dMsgProof,
-			// 		// 		});
-			// 		// 	console.log(
-			// 		// 		`process_deactiate_message tx: ${process_dmsg_res.transactionHash}`
-			// 		// 	);
-
-			// 		// 	break;
-
-			// 		// case 'proofAddNewKey':
-			// 		// 	let proofAddNewKeyData: ProofAddNewKeyData = entry.data;
-
-			// 		// 	let pubkey = {
-			// 		// 		x: uint256FromDecimalString(
-			// 		// 			proofAddNewKeyData.pubKey[0]
-			// 		// 		),
-			// 		// 		y: uint256FromDecimalString(
-			// 		// 			proofAddNewKeyData.pubKey[1]
-			// 		// 		),
-			// 		// 	};
-
-			// 		// 	let d = proofAddNewKeyData.d.map(
-			// 		// 		uint256FromDecimalString
-			// 		// 	);
-			// 		// 	let nullifier = uint256FromDecimalString(
-			// 		// 		proofAddNewKeyData.nullifier
-			// 		// 	);
-
-			// 		// 	let newKeyProof = {
-			// 		// 		a: '053eb9bf62de01898e5d7049bfeaee4611b78b54f516ff4b0fd93ffcdc491d8b170e2c3de370f8eeec93ebb57e49279adc68fb137f4aafe1b4206d7186592673',
-			// 		// 		b: '2746ba15cb4478a1a90bd512844cd0e57070357ff17ad90964b699f962f4f24817ce4dcc89d350df5d63ae7f05f0069272c3d352cb92237e682222e68d52da0f00551f58de3a3cac33d6af2fb052e4ff4d42008b5f33b310756a5e7017919087284dc00b9753a3891872ee599467348976ec2d72703d46949a9b8093a97718eb',
-			// 		// 		c: '1832b7d8607c041bd1437f43fe1d207ad64bea58f346cc91d0c72d9c02bbc4031decf433ecafc3874f4bcedbfae591caaf87834ad6867c7d342b96b6299ddd0a',
-			// 		// 	};
-
-			// 		// 	console.log('proof add new key proof', newKeyProof);
-			// 		// 	console.log('proof add new key nullifier', nullifier);
-
-			// 		// 	let add_new_key_res =
-			// 		// 		await operatorMaciClient.addNewKey({
-			// 		// 			d,
-			// 		// 			groth16Proof: newKeyProof,
-			// 		// 			nullifier,
-			// 		// 			pubkey,
-			// 		// 		});
-			// 		// 	console.log(
-			// 		// 		`add_new_key tx: ${add_new_key_res.transactionHash}`
-			// 		// 	);
-			// 		// 	break;
-
-			// 		case 'publishMessage':
-			// 			let publishMessageData: PublishMessageData = entry.data;
-
-			// 			let pubMsg = {
-			// 				data: publishMessageData.message,
-			// 			};
-
-			// 			let encPubMsg = {
-			// 				x: uint256FromDecimalString(
-			// 					publishMessageData.encPubKey[0]
-			// 				),
-			// 				y: uint256FromDecimalString(
-			// 					publishMessageData.encPubKey[1]
-			// 				),
-			// 			};
-
-			// 			let pub_msg_res = await user1MaciClient.publishMessage({
-			// 				encPubKey: encPubMsg,
-			// 				message: pubMsg,
-			// 			});
-
-			// 			console.log(
-			// 				`publish_message tx: ${pub_msg_res.transactionHash}`
-			// 			);
-			// 			break;
-			// 		default:
-			// 			console.log(`Unknown log type: ${entry.type}`);
-			// 	}
-			// 	await delay(500);
-			// }
 		} catch (error) {
 			console.error('Error start round:', error);
 		}
@@ -749,7 +611,7 @@ export async function amaciusertest(roundNum: number) {
 		let user1 = await generateAccount(i + 1);
 		let user2 = await generateAccount(i + 2);
 		// await delay(12000);
-		console.log(`---- Start Round: ${i / 3}----`);
+		console.log(`---- Start Round: ${i / 3} ----`);
 		console.log(
 			`${(i % (operatorList.length * 3)) / 3} operator pubkey: ${
 				operatorList[(i % (operatorList.length * 3)) / 3]
