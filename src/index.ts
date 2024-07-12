@@ -29,6 +29,7 @@ import { Account, PublicKey, batchGenMessage } from './lib/circom';
 import { benchmarkTest } from './test';
 import { amacitest } from './macitest';
 import { amaciusertest } from './amaciusertest';
+import { queryFunc } from './query';
 
 type DelegatorData = {
 	id: number;
@@ -120,7 +121,8 @@ export async function batchSend(recipients: DelegatorData[]) {
 // }
 
 async function main() {
-	await amaciusertest(160);
+	await amaciusertest(170);
+	//	await queryFunc();
 	// await amacitest();
 }
 

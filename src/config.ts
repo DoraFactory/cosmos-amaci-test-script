@@ -29,6 +29,7 @@ dotenv.config();
 
 export const rpcEndpoint = 'https://vota-sf-rpc.dorafactory.org/';
 export const restEndpoint = 'https://vota-sf-rest.dorafactory.org/';
+export const apiEndpoint = 'http://3.0.94.169:8000/';
 export const chainId = 'vota-sf';
 
 export const prefix = 'dora';
