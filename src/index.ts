@@ -30,6 +30,7 @@ import { benchmarkTest } from './test';
 import { amacitest } from './macitest';
 import { amaciusertest } from './amaciusertest';
 import { queryFunc } from './query';
+import { maciindexertest } from './maciindexertest';
 
 type DelegatorData = {
 	id: number;
@@ -121,10 +122,11 @@ export async function batchSend(recipients: DelegatorData[]) {
 // }
 
 async function main() {
-	await amaciusertest(170);
+	// await amaciusertest(170);
 	// await amaciusertest(2);
 	// await queryFunc();
 	// await amacitest();
+	await maciindexertest(100);
 }
 
 main();
