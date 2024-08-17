@@ -195,7 +195,7 @@ async function deployAMACIContract(
 		// 24, // nomal code id
 		// 26, // have input log
 		// 28,
-		31,
+		33,
 		{
 			round_info: {
 				title: 'AMACI Test Round',
