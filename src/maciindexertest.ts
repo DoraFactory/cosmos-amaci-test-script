@@ -108,10 +108,8 @@ async function deployMACIContract(
 	// return '';
 	let res = await client.instantiate(
 		address,
-		// 24, // nomal code id
-		// 26, // have input log
-		// 28,
-		32,
+		// 32, // testnet maci code_id
+		26, // mainnet maci code_id
 		{
 			round_info: { title: 'MACI Test Round', description: '', link: '' },
 			voting_time: {
@@ -192,10 +190,8 @@ async function deployAMACIContract(
 	// return '';
 	let res = await client.instantiate(
 		address,
-		// 24, // nomal code id
-		// 26, // have input log
-		// 28,
-		33,
+		// 36, // testnet amaci code_id
+		87, // mainnet amaci code_id
 		{
 			round_info: {
 				title: 'AMACI Test Round',

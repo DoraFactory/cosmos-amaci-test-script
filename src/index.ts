@@ -1,4 +1,3 @@
-import fs from 'fs';
 import {
 	getSignerClient,
 	generateAccount,
@@ -31,6 +30,7 @@ import { amacitest } from './macitest';
 import { amaciusertest } from './amaciusertest';
 import { queryFunc } from './query';
 import { maciindexertest } from './maciindexertest';
+import { amaciregistrytest } from './amaciregistrytest';
 
 type DelegatorData = {
 	id: number;
@@ -126,7 +126,8 @@ async function main() {
 	// await amaciusertest(2);
 	// await queryFunc();
 	// await amacitest();
-	await maciindexertest(100);
+	// await maciindexertest(3);
+	await amaciregistrytest(50);
 }
 
 main();

@@ -11,8 +11,9 @@ import {
 } from '@cosmjs/cosmwasm-stargate';
 import { HdPath, stringToPath } from '@cosmjs/crypto';
 import { MaciClient } from './ts/Maci.client';
-
+import { AMaciClient } from './ts/AMaci.client';
 import * as dotenv from 'dotenv';
+import { RegistryClient } from './ts/Registry.client';
 dotenv.config();
 
 // export const rpcEndpoint = 'https://vota-rpc.dorafactory.org';
@@ -21,7 +22,7 @@ dotenv.config();
 
 export const rpcEndpoint = 'https://vota-testnet-rpc.dorafactory.org';
 export const restEndpoint = 'https://vota-testnet-rest.dorafactory.org';
-export const apiEndpoint = 'http://3.0.94.169:8000/';
+export const apiEndpoint = 'http://3.0.94.169:3000/';
 export const chainId = 'vota-testnet';
 
 // export const rpcEndpoint = 'http://127.0.0.1:26657';
@@ -51,6 +52,9 @@ export const defaultCoordPubKey = [
 	3557592161792765812904087712812111121909518311142005886657252371904276697771n,
 	4363822302427519764561660537570341277214758164895027920046745209970137856681n,
 ] as [bigint, bigint];
+
+export const registryContractAddress =
+	'dora15fp8v5kdgh9zhzfelfmt2qpzgtw2rcskz7hhkuqa3gr7y720s0xs2fjkfd';
 
 /** Setting to speed up testing */
 const defaultSigningClientOptions: SigningStargateClientOptions = {
@@ -133,6 +137,51 @@ export async function getMaciClientBy(
 	const signingCosmWasmClient = await getContractClientByWallet(wallet);
 	const [{ address }] = await wallet.getAccounts();
 	return new MaciClient(signingCosmWasmClient, address, contractAddress);
+}
+
+export async function getAMaciClient() {
+	const contractAddress = process.env.CONTRACT_ADDRESS;
+	const mnemonic = process.env.MNEMONIC;
+	if (contractAddress === undefined) {
+		console.log('Missing CONTRACT_ADDRESS in .env');
+		process.exit(0);
+	}
+
+	if (mnemonic === undefined) {
+		console.log('Missing MNEMONIC in .env');
+		process.exit(0);
+	}
+	const wallet = await Secp256k1HdWallet.fromMnemonic(mnemonic, {
+		prefix,
+	});
+
+	const signingCosmWasmClient = await getContractClient();
+	const [{ address }] = await wallet.getAccounts();
+	return new AMaciClient(signingCosmWasmClient, address, contractAddress);
+}
+
+export async function getAMaciClientByWallet(wallet: DirectSecp256k1HdWallet) {
+	const signingCosmWasmClient = await getContractClientByWallet(wallet);
+	const [{ address }] = await wallet.getAccounts();
+	return new AMaciClient(signingCosmWasmClient, address, contractAddress);
+}
+
+export async function getAMaciClientBy(
+	wallet: DirectSecp256k1HdWallet,
+	contractAddress: string
+) {
+	const signingCosmWasmClient = await getContractClientByWallet(wallet);
+	const [{ address }] = await wallet.getAccounts();
+	return new AMaciClient(signingCosmWasmClient, address, contractAddress);
+}
+
+export async function getRegistryClientBy(
+	wallet: DirectSecp256k1HdWallet,
+	contractAddress: string
+) {
+	const signingCosmWasmClient = await getContractClientByWallet(wallet);
+	const [{ address }] = await wallet.getAccounts();
+	return new RegistryClient(signingCosmWasmClient, address, contractAddress);
 }
 
 export async function getContractClientByWallet(

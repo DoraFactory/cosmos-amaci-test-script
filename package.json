@@ -38,5 +38,9 @@
 		"@types/tar": "^6.1.10",
 		"@types/yargs": "^17.0.24",
 		"snarkjs": "^0.7.0"
-	}
+	},
+	"include": [
+		"src/**/*",
+		"src/@types/index.d.ts"
+	]
 }
