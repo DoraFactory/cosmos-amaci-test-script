@@ -108,8 +108,8 @@ async function createAMACIRound(
 		},
 		maxVoter,
 		maxOption,
-		certificationSystem: 0,
-		circuitType: 0,
+		certificationSystem: '0',
+		circuitType: '0',
 	});
 	let contractAddress = '';
 	res.events.map(event => {

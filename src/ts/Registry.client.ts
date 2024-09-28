@@ -171,8 +171,8 @@ export interface RegistryInterface extends RegistryReadOnlyInterface {
 			votingTime,
 			whitelist,
 		}: {
-			certificationSystem: number;
-			circuitType: number;
+			certificationSystem: Uint256;
+			circuitType: Uint256;
 			maxOption: Uint256;
 			maxVoter: Uint256;
 			operator: Addr;
@@ -334,8 +334,8 @@ export class RegistryClient
 			votingTime,
 			whitelist,
 		}: {
-			certificationSystem: number;
-			circuitType: number;
+			certificationSystem: Uint256;
+			circuitType: Uint256;
 			maxOption: Uint256;
 			maxVoter: Uint256;
 			operator: Addr;
