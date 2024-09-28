@@ -108,8 +108,8 @@ async function deployMACIContract(
 	// return '';
 	let res = await client.instantiate(
 		address,
-		// 32, // testnet maci code_id
-		26, // mainnet maci code_id
+		32, // testnet maci code_id
+		// 26, // mainnet maci code_id
 		{
 			round_info: { title: 'MACI Test Round', description: '', link: '' },
 			voting_time: {
@@ -167,7 +167,7 @@ async function deployMACIContract(
 			plonk_tally_vkey: null,
 			max_vote_options: '5',
 			whitelist: null,
-			circuit_type: '0',
+			circuit_type: '1',
 			certification_system: '0',
 		},
 		'MACI',
@@ -190,8 +190,8 @@ async function deployAMACIContract(
 	// return '';
 	let res = await client.instantiate(
 		address,
-		// 36, // testnet amaci code_id
-		87, // mainnet amaci code_id
+		36, // testnet amaci code_id
+		// 87, // mainnet amaci code_id
 		{
 			round_info: {
 				title: 'AMACI Test Round',
@@ -275,9 +275,6 @@ async function deployAMACIContract(
 			},
 			max_vote_options: '25',
 			whitelist: null,
-			circuit_type: '0',
-			voice_credit_amount: '100',
-			pre_deactivate_root: '0',
 		},
 		'AMACI',
 		'auto'

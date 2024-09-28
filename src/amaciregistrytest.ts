@@ -51,52 +51,29 @@ async function readFile(filePath: string) {
 	}
 }
 
-interface UserPubkeyData {
-	pubkeys: string[][];
-}
-
-interface AMaciLogEntry {
-	type: string;
-	data: any;
-}
-
-interface PublishDeactivateMessageData {
-	message: [string, string, string, string, string, string, string];
-	encPubKey: string[];
-}
-
-interface ProofDeactivateData {
-	size: string;
-	newDeactivateCommitment: string;
-	newDeactivateRoot: string;
-}
-
-interface ProofAddNewKeyData {
-	pubKey: string[];
-	d: string[];
-	nullifier: string;
-}
-
-interface PublishMessageData {
-	message: [string, string, string, string, string, string, string];
-	encPubKey: string[];
-}
-
-interface ProcessMessageData {
-	newStateCommitment: string;
-}
-
-interface ProcessTallyData {
-	newTallyCommitment: string;
-}
-
-interface StopTallyingPeriodData {
-	results: string[];
-	salt: string;
-}
-
 function uint256FromDecimalString(decimalString: string) {
 	return decimalString; // Placeholder for conversion logic
+}
+
+function waitUntil(endTime: Date): Promise<void> {
+	return new Promise(resolve => {
+		const interval = setInterval(() => {
+			const now = new Date();
+			const waitTime = endTime.getTime() - now.getTime();
+
+			if (waitTime <= 0) {
+				// End time has already passed
+				clearInterval(interval);
+				console.log("Time's up! We have reached the end time.");
+				resolve();
+			} else {
+				// Output remaining time in seconds
+				console.log(
+					`Remaining time: ${(waitTime / 1000).toFixed(1)} seconds`
+				);
+			}
+		}, 1000); // Check every second
+	});
 }
 
 async function createAMACIRound(
@@ -131,6 +108,8 @@ async function createAMACIRound(
 		},
 		maxVoter,
 		maxOption,
+		certificationSystem: 0,
+		circuitType: 0,
 	});
 	let contractAddress = '';
 	res.events.map(event => {
@@ -187,11 +166,17 @@ export async function randomSubmitMsg(
 	/**
 	 * 随机给一个项目投若干票
 	 */
+	// const plan = [
+	// 	[Math.floor(Math.random() * 10), Math.floor(Math.random() * 10)] as [
+	// 		number,
+	// 		number
+	// 	],
+	// ];
 	const plan = [
-		[Math.floor(Math.random() * 10), Math.floor(Math.random() * 10)] as [
-			number,
-			number
-		],
+		[1, 1] as [number, number],
+		[2, 2] as [number, number],
+		[3, 3] as [number, number],
+		[4, 10] as [number, number],
 	];
 
 	const payload = batchGenMessage(stateIdx, maciAccount, coordPubKey, plan);
@@ -315,6 +300,7 @@ async function batch_2_amaci_test(
 	user1: DirectSecp256k1HdWallet,
 	user2: DirectSecp256k1HdWallet,
 	operatorPubkey: string[],
+	end_voting: Date,
 	skipUserOperation: boolean = true
 ) {
 	const pubkeyFilePath = './src/test/user_pubkey.json';
@@ -324,6 +310,9 @@ async function batch_2_amaci_test(
 		creator,
 		registryContractAddress
 	);
+
+	let creatorClient = await getContractClientByWallet(creator);
+
 	let user1Address = (await user1.getAccounts())[0].address;
 	let user2Address = (await user2.getAccounts())[0].address;
 	let user1Client = await getContractClientByWallet(user1);
@@ -333,13 +322,20 @@ async function batch_2_amaci_test(
 	let maciAccount2 = genKeypair();
 
 	const base_time = new Date();
-	const start_voting = new Date(base_time.getTime() + 10 * 60 * 1000); // 10 分钟
+	// const start_voting = new Date(base_time.getTime() + 2 * 60 * 1000); // 10 分钟
+	const start_voting = new Date(base_time.getTime()); // 10 分钟
 
 	console.log(`Current time: ${start_voting.toLocaleTimeString()}`);
 
-	// 增加2分钟
-	const end_voting = new Date(start_voting.getTime() + 60 * 60 * 1000); // 1 小时
+	// const end_voting = new Date(start_voting.getTime() + 8 * 60 * 1000); // 1 小时
 	console.log(`Time after 2 minutes: ${end_voting.toLocaleTimeString()}`);
+	// const start_voting = new Date();
+
+	// console.log(`Current time: ${start_voting.toLocaleTimeString()}`);
+
+	// // 增加10s
+	// const end_voting = new Date(start_voting.getTime() + 10 * 60 * 1000); // 10s
+	// console.log(`Time after 2 minutes: ${end_voting.toLocaleTimeString()}`);
 
 	let contractAddress = '';
 	// try {
@@ -387,6 +383,7 @@ async function batch_2_amaci_test(
 	// } catch {
 	// 	console.log('deploy failed.');
 	// }
+	await delay(16000);
 
 	if (skipUserOperation === true) {
 		console.log('skip user operation');
@@ -405,6 +402,21 @@ async function batch_2_amaci_test(
 				user2,
 				contractAddress
 			);
+
+			// let setVoteOptionsRes = await creatorMaciClient.setVoteOptionsMap({
+			// 	voteOptionMap: [
+			// 		'Research and Development of AI-Based Smart Home Device Management and Automation Control Systems',
+			// 		'Optimization Platform for Efficient Data Transmission and Fault Tolerance in Large-Scale Distributed Computing',
+			// 		'Application of Multi-Level User Behavior Analysis and Recommendation Algorithms in E-Commerce Platforms',
+			// 		'Security Protocols and Compliance Research for Decentralized Financial Platforms Based on Blockchain Technology',
+			// 		'Optimization of Low-Latency Real-Time Data Transmission and Edge Computing in Next-Generation Network Architecture',
+			// 	],
+			// });
+			// console.log(
+			// 	`creator set_vote_option hash: ${setVoteOptionsRes.transactionHash}`
+			// );
+			// await waitUntil(start_voting);
+			// await delay(16000);
 
 			try {
 				let grant_res = await creatorMaciClient.grant({
@@ -452,12 +464,12 @@ async function batch_2_amaci_test(
 				});
 				console.log(`user2 signup hash: ${user2_res.transactionHash}`);
 
-				await randomSubmitDeactivateMsg(
-					user1MaciClient,
-					0,
-					maciAccount1,
-					coordPubKey
-				);
+				// await randomSubmitDeactivateMsg(
+				// 	user1MaciClient,
+				// 	0,
+				// 	maciAccount1,
+				// 	coordPubKey
+				// );
 
 				await randomSubmitMsg(
 					user1Client,
@@ -501,6 +513,7 @@ async function batch_4_amaci_test(
 	user11: DirectSecp256k1HdWallet,
 	user12: DirectSecp256k1HdWallet,
 	operatorPubkey: string[],
+	end_voting: Date,
 	skipUserOperation: boolean = true
 ) {
 	const pubkeyFilePath = './src/test/user_pubkey.json';
@@ -548,11 +561,19 @@ async function batch_4_amaci_test(
 	let maciAccount11 = genKeypair();
 	let maciAccount12 = genKeypair();
 
+	// const start_voting = new Date();
+	// console.log(`Current time: ${start_voting.toLocaleTimeString()}`);
+
+	// // 增加2分钟
+	// const end_voting = new Date(start_voting.getTime() + 60 * 60 * 1000);
+	// console.log(`Time after 2 minutes: ${end_voting.toLocaleTimeString()}`);
+
 	const start_voting = new Date();
+
 	console.log(`Current time: ${start_voting.toLocaleTimeString()}`);
 
-	// 增加2分钟
-	const end_voting = new Date(start_voting.getTime() + 60 * 60 * 1000);
+	// 增加10s
+	// const end_voting = new Date(start_voting.getTime() + 30 * 60 * 1000); // 10s
 	console.log(`Time after 2 minutes: ${end_voting.toLocaleTimeString()}`);
 
 	let contractAddress = '';
@@ -570,7 +591,7 @@ async function batch_4_amaci_test(
 				start_voting,
 				end_voting,
 				'5',
-				'5',
+				'6',
 				{
 					users: [
 						{
@@ -841,12 +862,12 @@ async function batch_4_amaci_test(
 					`user12 signup hash: ${user12_res.transactionHash}`
 				);
 
-				await randomSubmitDeactivateMsg(
-					user1MaciClient,
-					0,
-					maciAccount1,
-					coordPubKey
-				);
+				// await randomSubmitDeactivateMsg(
+				// 	user1MaciClient,
+				// 	0,
+				// 	maciAccount1,
+				// 	coordPubKey
+				// );
 
 				await randomSubmitMsg(
 					user1Client,
@@ -1058,11 +1079,33 @@ export async function amaciregistrytest(roundNum: number) {
 	// await batchSend(accountAddresslist);
 
 	let operatorList = [
+		// {
+		// 	operator: 'dora15yfyalf872yut8cecy8p2j7rer9dd98rlg3xtq',
+		// 	pubkey: [
+		// 		'7421895562686352826563669933550830041677218724210020561066263498415701325176',
+		// 		'15885728170420100812951141355295788125825926252169931895803773048587171524289',
+		// 	],
+		// },
+
 		{
-			operator: 'dora15yfyalf872yut8cecy8p2j7rer9dd98rlg3xtq',
+			operator: 'dora149n5yhzgk5gex0eqmnnpnsxh6ys4exg5xyqjzm',
 			pubkey: [
-				'7421895562686352826563669933550830041677218724210020561066263498415701325176',
-				'15885728170420100812951141355295788125825926252169931895803773048587171524289',
+				'3457695696360848193502608246254422070002779638488733236214423797131720399296',
+				'10721319678265866063861912417916780787229942812531198850410477756757845824096',
+			],
+		},
+		{
+			operator: 'dora1zrd68hgj5uzqpm5x8v6pylwqjsnltp6nyr8s0k',
+			pubkey: [
+				'5424741844275630152950028819860276183538330999940395309613975245790840672621',
+				'6821363586466624930174394695023126212730779300840339744873622125361194404156',
+			],
+		},
+		{
+			operator: 'dora1k383vky62t85496xwp6qnalw5u2qj4tvsneluc',
+			pubkey: [
+				'339457423059495574326820494023899998621467676828017937021309840270576858799',
+				'4138216818137880315912826301418122715579481744260360896824552739285524788661',
 			],
 		},
 	];
@@ -1084,6 +1127,8 @@ export async function amaciregistrytest(roundNum: number) {
 	// 		operatorList[(i % (operatorList.length * 3)) / 3]
 	// 	);
 	// }
+	const start_voting = new Date();
+	const end_voting = new Date(start_voting.getTime() + 180 * 60 * 1000); // 10s
 
 	for (let i = start; i <= thread; i += 3) {
 		let creator = await generateAccount(0);
@@ -1116,11 +1161,12 @@ export async function amaciregistrytest(roundNum: number) {
 				user1,
 				user2,
 				operatorList[(i % (operatorList.length * 3)) / 3].pubkey,
-				true
+				end_voting,
+				false
 			);
 		} else {
 			console.log('test: amaci 4');
-
+			console.log('skip amaci 4');
 			await batch_4_amaci_test(
 				creator,
 				operatorList[(i % (operatorList.length * 3)) / 3].operator,
@@ -1137,7 +1183,8 @@ export async function amaciregistrytest(roundNum: number) {
 				user11,
 				user12,
 				operatorList[(i % (operatorList.length * 3)) / 3].pubkey,
-				true
+				end_voting,
+				false
 			);
 		}
 	}

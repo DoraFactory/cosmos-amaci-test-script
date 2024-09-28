@@ -54,7 +54,7 @@ export const defaultCoordPubKey = [
 ] as [bigint, bigint];
 
 export const registryContractAddress =
-	'dora1ls386zdw896pgjpc6ervqs7px658cncz83gzfeere4psajawek3synpgds';
+	'dora1evn47n72kmnfzyfe6wmhsk4swvegvcacj860sc8mu8mym9d8xv7sl0jazp';
 
 /** Setting to speed up testing */
 const defaultSigningClientOptions: SigningStargateClientOptions = {
