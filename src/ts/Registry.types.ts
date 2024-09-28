@@ -28,8 +28,8 @@ export type ExecuteMsg =
 	  }
 	| {
 			create_round: {
-				certification_system: number;
-				circuit_type: number;
+				certification_system: Uint256;
+				circuit_type: Uint256;
 				max_option: Uint256;
 				max_voter: Uint256;
 				operator: Addr;
