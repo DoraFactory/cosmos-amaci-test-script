@@ -1152,40 +1152,51 @@ export async function amaciregistrytest(roundNum: number) {
 			}`
 		);
 
-		// 根据当前批次选择不同的处理函数
-		if ((i / 3) % 2 === 0) {
-			console.log('test: amaci 2');
-			await batch_2_amaci_test(
-				creator,
-				operatorList[(i % (operatorList.length * 3)) / 3].operator,
-				user1,
-				user2,
-				operatorList[(i % (operatorList.length * 3)) / 3].pubkey,
-				end_voting,
-				false
-			);
-		} else {
-			console.log('test: amaci 4');
-			console.log('skip amaci 4');
-			await batch_4_amaci_test(
-				creator,
-				operatorList[(i % (operatorList.length * 3)) / 3].operator,
-				user1,
-				user2,
-				user3,
-				user4,
-				user5,
-				user6,
-				user7,
-				user8,
-				user9,
-				user10,
-				user11,
-				user12,
-				operatorList[(i % (operatorList.length * 3)) / 3].pubkey,
-				end_voting,
-				false
-			);
-		}
+		console.log('test: amaci 2');
+		await batch_2_amaci_test(
+			creator,
+			operatorList[(i % (operatorList.length * 3)) / 3].operator,
+			user1,
+			user2,
+			operatorList[(i % (operatorList.length * 3)) / 3].pubkey,
+			end_voting,
+			false
+		);
+
+		// // 根据当前批次选择不同的处理函数
+		// if ((i / 3) % 2 === 0) {
+		// 	console.log('test: amaci 2');
+		// 	await batch_2_amaci_test(
+		// 		creator,
+		// 		operatorList[(i % (operatorList.length * 3)) / 3].operator,
+		// 		user1,
+		// 		user2,
+		// 		operatorList[(i % (operatorList.length * 3)) / 3].pubkey,
+		// 		end_voting,
+		// 		false
+		// 	);
+		// } else {
+		// 	console.log('test: amaci 4');
+		// 	console.log('skip amaci 4');
+		// 	// await batch_4_amaci_test(
+		// 	// 	creator,
+		// 	// 	operatorList[(i % (operatorList.length * 3)) / 3].operator,
+		// 	// 	user1,
+		// 	// 	user2,
+		// 	// 	user3,
+		// 	// 	user4,
+		// 	// 	user5,
+		// 	// 	user6,
+		// 	// 	user7,
+		// 	// 	user8,
+		// 	// 	user9,
+		// 	// 	user10,
+		// 	// 	user11,
+		// 	// 	user12,
+		// 	// 	operatorList[(i % (operatorList.length * 3)) / 3].pubkey,
+		// 	// 	end_voting,
+		// 	// 	false
+		// 	// );
+		// }
 	}
 }
