@@ -453,23 +453,64 @@ async function batch_2_amaci_test(
 						maciAccount2.pubKey[0].toString()
 					),
 				};
+				try {
+					let user1_res = await user1MaciClient.signUp({
+						pubkey: pubkey0,
+					});
+					console.log(
+						`user1 signup hash: ${user1_res.transactionHash}`
+					);
+				} catch (err) {
+					// 将 err 类型显式地转换为 Error
+					if (err instanceof Error) {
+						if (
+							err.message.includes(
+								'You might want to check later. There was a wait of 16 seconds.'
+							)
+						) {
+							console.log(err.message);
+							console.log('skip this error and waiting 16s.');
+							await delay(17000);
+						} else {
+							console.error('Unexpected error', err);
 
-				let user1_res = await user1MaciClient.signUp({
-					pubkey: pubkey0,
-				});
-				console.log(`user1 signup hash: ${user1_res.transactionHash}`);
+							throw err;
+						}
+					}
+				}
 
-				let user2_res = await user2MaciClient.signUp({
-					pubkey: pubkey1,
-				});
-				console.log(`user2 signup hash: ${user2_res.transactionHash}`);
+				try {
+					let user2_res = await user2MaciClient.signUp({
+						pubkey: pubkey1,
+					});
+					console.log(
+						`user2 signup hash: ${user2_res.transactionHash}`
+					);
+				} catch (err) {
+					// 将 err 类型显式地转换为 Error
+					if (err instanceof Error) {
+						if (
+							err.message.includes(
+								'You might want to check later. There was a wait of 16 seconds.'
+							)
+						) {
+							console.log(err.message);
+							console.log('skip this error and waiting 16s.');
+							await delay(17000);
+						} else {
+							console.error('Unexpected error', err);
 
-				// await randomSubmitDeactivateMsg(
-				// 	user1MaciClient,
-				// 	0,
-				// 	maciAccount1,
-				// 	coordPubKey
-				// );
+							throw err;
+						}
+					}
+				}
+
+				await randomSubmitDeactivateMsg(
+					user1MaciClient,
+					0,
+					maciAccount1,
+					coordPubKey
+				);
 
 				await randomSubmitMsg(
 					user1Client,
@@ -568,7 +609,9 @@ async function batch_4_amaci_test(
 	// const end_voting = new Date(start_voting.getTime() + 60 * 60 * 1000);
 	// console.log(`Time after 2 minutes: ${end_voting.toLocaleTimeString()}`);
 
-	const start_voting = new Date();
+	const base_time = new Date();
+	// const start_voting = new Date(base_time.getTime() + 2 * 60 * 1000); // 10 分钟
+	const start_voting = new Date(base_time.getTime()); // 10 分钟
 
 	console.log(`Current time: ${start_voting.toLocaleTimeString()}`);
 
@@ -700,6 +743,8 @@ async function batch_4_amaci_test(
 				console.log(`start num_sign_ups: ${numSignUp}`); // Expect 0
 				await delay(500);
 
+				const gasPrice = GasPrice.fromString('100000000000peaka');
+				const fee = calculateFee(39000000, gasPrice);
 				let pubkey0 = {
 					x: uint256FromDecimalString(
 						maciAccount1.pubKey[0].toString()
@@ -708,10 +753,34 @@ async function batch_4_amaci_test(
 						maciAccount1.pubKey[1].toString()
 					),
 				};
-				let user1_res = await user1MaciClient.signUp({
-					pubkey: pubkey0,
-				});
-				console.log(`user1 signup hash: ${user1_res.transactionHash}`);
+				try {
+					let user1_res = await user1MaciClient.signUp(
+						{
+							pubkey: pubkey0,
+						},
+						fee
+					);
+					console.log(
+						`user1 signup hash: ${user1_res.transactionHash}`
+					);
+				} catch (err) {
+					// 将 err 类型显式地转换为 Error
+					if (err instanceof Error) {
+						if (
+							err.message.includes(
+								'You might want to check later. There was a wait of 16 seconds.'
+							)
+						) {
+							console.log(err.message);
+							console.log('skip this error and waiting 16s.');
+							await delay(17000);
+						} else {
+							console.error('Unexpected error', err);
+
+							throw err;
+						}
+					}
+				}
 
 				let pubkey1 = {
 					x: uint256FromDecimalString(
@@ -721,10 +790,34 @@ async function batch_4_amaci_test(
 						maciAccount2.pubKey[0].toString()
 					),
 				};
-				let user2_res = await user2MaciClient.signUp({
-					pubkey: pubkey1,
-				});
-				console.log(`user2 signup hash: ${user2_res.transactionHash}`);
+				try {
+					let user2_res = await user2MaciClient.signUp(
+						{
+							pubkey: pubkey1,
+						},
+						fee
+					);
+					console.log(
+						`user2 signup hash: ${user2_res.transactionHash}`
+					);
+				} catch (err) {
+					// 将 err 类型显式地转换为 Error
+					if (err instanceof Error) {
+						if (
+							err.message.includes(
+								'You might want to check later. There was a wait of 16 seconds.'
+							)
+						) {
+							console.log(err.message);
+							console.log('skip this error and waiting 16s.');
+							await delay(17000);
+						} else {
+							console.error('Unexpected error', err);
+
+							throw err;
+						}
+					}
+				}
 
 				let pubkey2 = {
 					x: uint256FromDecimalString(
@@ -734,10 +827,34 @@ async function batch_4_amaci_test(
 						maciAccount3.pubKey[0].toString()
 					),
 				};
-				let user3_res = await user3MaciClient.signUp({
-					pubkey: pubkey2,
-				});
-				console.log(`user3 signup hash: ${user3_res.transactionHash}`);
+				try {
+					let user3_res = await user3MaciClient.signUp(
+						{
+							pubkey: pubkey2,
+						},
+						fee
+					);
+					console.log(
+						`user3 signup hash: ${user3_res.transactionHash}`
+					);
+				} catch (err) {
+					// 将 err 类型显式地转换为 Error
+					if (err instanceof Error) {
+						if (
+							err.message.includes(
+								'You might want to check later. There was a wait of 16 seconds.'
+							)
+						) {
+							console.log(err.message);
+							console.log('skip this error and waiting 16s.');
+							await delay(17000);
+						} else {
+							console.error('Unexpected error', err);
+
+							throw err;
+						}
+					}
+				}
 
 				let pubkey3 = {
 					x: uint256FromDecimalString(
@@ -747,10 +864,34 @@ async function batch_4_amaci_test(
 						maciAccount4.pubKey[0].toString()
 					),
 				};
-				let user4_res = await user4MaciClient.signUp({
-					pubkey: pubkey3,
-				});
-				console.log(`user4 signup hash: ${user4_res.transactionHash}`);
+				try {
+					let user4_res = await user4MaciClient.signUp(
+						{
+							pubkey: pubkey3,
+						},
+						fee
+					);
+					console.log(
+						`user4 signup hash: ${user4_res.transactionHash}`
+					);
+				} catch (err) {
+					// 将 err 类型显式地转换为 Error
+					if (err instanceof Error) {
+						if (
+							err.message.includes(
+								'You might want to check later. There was a wait of 16 seconds.'
+							)
+						) {
+							console.log(err.message);
+							console.log('skip this error and waiting 16s.');
+							await delay(17000);
+						} else {
+							console.error('Unexpected error', err);
+
+							throw err;
+						}
+					}
+				}
 
 				let pubkey4 = {
 					x: uint256FromDecimalString(
@@ -760,10 +901,34 @@ async function batch_4_amaci_test(
 						maciAccount5.pubKey[0].toString()
 					),
 				};
-				let user5_res = await user5MaciClient.signUp({
-					pubkey: pubkey4,
-				});
-				console.log(`user5 signup hash: ${user5_res.transactionHash}`);
+				try {
+					let user5_res = await user5MaciClient.signUp(
+						{
+							pubkey: pubkey4,
+						},
+						fee
+					);
+					console.log(
+						`user5 signup hash: ${user5_res.transactionHash}`
+					);
+				} catch (err) {
+					// 将 err 类型显式地转换为 Error
+					if (err instanceof Error) {
+						if (
+							err.message.includes(
+								'You might want to check later. There was a wait of 16 seconds.'
+							)
+						) {
+							console.log(err.message);
+							console.log('skip this error and waiting 16s.');
+							await delay(17000);
+						} else {
+							console.error('Unexpected error', err);
+
+							throw err;
+						}
+					}
+				}
 
 				let pubkey5 = {
 					x: uint256FromDecimalString(
@@ -773,10 +938,34 @@ async function batch_4_amaci_test(
 						maciAccount6.pubKey[0].toString()
 					),
 				};
-				let user6_res = await user6MaciClient.signUp({
-					pubkey: pubkey5,
-				});
-				console.log(`user6 signup hash: ${user6_res.transactionHash}`);
+				try {
+					let user6_res = await user6MaciClient.signUp(
+						{
+							pubkey: pubkey5,
+						},
+						fee
+					);
+					console.log(
+						`user6 signup hash: ${user6_res.transactionHash}`
+					);
+				} catch (err) {
+					// 将 err 类型显式地转换为 Error
+					if (err instanceof Error) {
+						if (
+							err.message.includes(
+								'You might want to check later. There was a wait of 16 seconds.'
+							)
+						) {
+							console.log(err.message);
+							console.log('skip this error and waiting 16s.');
+							await delay(17000);
+						} else {
+							console.error('Unexpected error', err);
+
+							throw err;
+						}
+					}
+				}
 
 				let pubkey6 = {
 					x: uint256FromDecimalString(
@@ -786,10 +975,34 @@ async function batch_4_amaci_test(
 						maciAccount7.pubKey[0].toString()
 					),
 				};
-				let user7_res = await user7MaciClient.signUp({
-					pubkey: pubkey6,
-				});
-				console.log(`user7 signup hash: ${user7_res.transactionHash}`);
+				try {
+					let user7_res = await user7MaciClient.signUp(
+						{
+							pubkey: pubkey6,
+						},
+						fee
+					);
+					console.log(
+						`user7 signup hash: ${user7_res.transactionHash}`
+					);
+				} catch (err) {
+					// 将 err 类型显式地转换为 Error
+					if (err instanceof Error) {
+						if (
+							err.message.includes(
+								'You might want to check later. There was a wait of 16 seconds.'
+							)
+						) {
+							console.log(err.message);
+							console.log('skip this error and waiting 16s.');
+							await delay(17000);
+						} else {
+							console.error('Unexpected error', err);
+
+							throw err;
+						}
+					}
+				}
 
 				let pubkey7 = {
 					x: uint256FromDecimalString(
@@ -799,10 +1012,34 @@ async function batch_4_amaci_test(
 						maciAccount8.pubKey[0].toString()
 					),
 				};
-				let user8_res = await user8MaciClient.signUp({
-					pubkey: pubkey7,
-				});
-				console.log(`user8 signup hash: ${user8_res.transactionHash}`);
+				try {
+					let user8_res = await user8MaciClient.signUp(
+						{
+							pubkey: pubkey7,
+						},
+						fee
+					);
+					console.log(
+						`user8 signup hash: ${user8_res.transactionHash}`
+					);
+				} catch (err) {
+					// 将 err 类型显式地转换为 Error
+					if (err instanceof Error) {
+						if (
+							err.message.includes(
+								'You might want to check later. There was a wait of 16 seconds.'
+							)
+						) {
+							console.log(err.message);
+							console.log('skip this error and waiting 16s.');
+							await delay(17000);
+						} else {
+							console.error('Unexpected error', err);
+
+							throw err;
+						}
+					}
+				}
 
 				let pubkey8 = {
 					x: uint256FromDecimalString(
@@ -812,10 +1049,34 @@ async function batch_4_amaci_test(
 						maciAccount9.pubKey[0].toString()
 					),
 				};
-				let user9_res = await user9MaciClient.signUp({
-					pubkey: pubkey8,
-				});
-				console.log(`user9 signup hash: ${user9_res.transactionHash}`);
+				try {
+					let user9_res = await user9MaciClient.signUp(
+						{
+							pubkey: pubkey8,
+						},
+						fee
+					);
+					console.log(
+						`user9 signup hash: ${user9_res.transactionHash}`
+					);
+				} catch (err) {
+					// 将 err 类型显式地转换为 Error
+					if (err instanceof Error) {
+						if (
+							err.message.includes(
+								'You might want to check later. There was a wait of 16 seconds.'
+							)
+						) {
+							console.log(err.message);
+							console.log('skip this error and waiting 16s.');
+							await delay(17000);
+						} else {
+							console.error('Unexpected error', err);
+
+							throw err;
+						}
+					}
+				}
 
 				let pubkey9 = {
 					x: uint256FromDecimalString(
@@ -825,12 +1086,34 @@ async function batch_4_amaci_test(
 						maciAccount10.pubKey[0].toString()
 					),
 				};
-				let user10_res = await user10MaciClient.signUp({
-					pubkey: pubkey9,
-				});
-				console.log(
-					`user10 signup hash: ${user10_res.transactionHash}`
-				);
+				try {
+					let user10_res = await user10MaciClient.signUp(
+						{
+							pubkey: pubkey9,
+						},
+						fee
+					);
+					console.log(
+						`user10 signup hash: ${user10_res.transactionHash}`
+					);
+				} catch (err) {
+					// 将 err 类型显式地转换为 Error
+					if (err instanceof Error) {
+						if (
+							err.message.includes(
+								'You might want to check later. There was a wait of 16 seconds.'
+							)
+						) {
+							console.log(err.message);
+							console.log('skip this error and waiting 16s.');
+							await delay(17000);
+						} else {
+							console.error('Unexpected error', err);
+
+							throw err;
+						}
+					}
+				}
 
 				let pubkey10 = {
 					x: uint256FromDecimalString(
@@ -840,12 +1123,34 @@ async function batch_4_amaci_test(
 						maciAccount11.pubKey[0].toString()
 					),
 				};
-				let user11_res = await user11MaciClient.signUp({
-					pubkey: pubkey10,
-				});
-				console.log(
-					`user11 signup hash: ${user11_res.transactionHash}`
-				);
+				try {
+					let user11_res = await user11MaciClient.signUp(
+						{
+							pubkey: pubkey10,
+						},
+						fee
+					);
+					console.log(
+						`user11 signup hash: ${user11_res.transactionHash}`
+					);
+				} catch (err) {
+					// 将 err 类型显式地转换为 Error
+					if (err instanceof Error) {
+						if (
+							err.message.includes(
+								'You might want to check later. There was a wait of 16 seconds.'
+							)
+						) {
+							console.log(err.message);
+							console.log('skip this error and waiting 16s.');
+							await delay(17000);
+						} else {
+							console.error('Unexpected error', err);
+
+							throw err;
+						}
+					}
+				}
 
 				let pubkey11 = {
 					x: uint256FromDecimalString(
@@ -855,19 +1160,41 @@ async function batch_4_amaci_test(
 						maciAccount12.pubKey[0].toString()
 					),
 				};
-				let user12_res = await user12MaciClient.signUp({
-					pubkey: pubkey11,
-				});
-				console.log(
-					`user12 signup hash: ${user12_res.transactionHash}`
-				);
+				try {
+					let user12_res = await user12MaciClient.signUp(
+						{
+							pubkey: pubkey11,
+						},
+						fee
+					);
+					console.log(
+						`user12 signup hash: ${user12_res.transactionHash}`
+					);
+				} catch (err) {
+					// 将 err 类型显式地转换为 Error
+					if (err instanceof Error) {
+						if (
+							err.message.includes(
+								'You might want to check later. There was a wait of 16 seconds.'
+							)
+						) {
+							console.log(err.message);
+							console.log('skip this error and waiting 16s.');
+							await delay(17000);
+						} else {
+							console.error('Unexpected error', err);
 
-				// await randomSubmitDeactivateMsg(
-				// 	user1MaciClient,
-				// 	0,
-				// 	maciAccount1,
-				// 	coordPubKey
-				// );
+							throw err;
+						}
+					}
+				}
+
+				await randomSubmitDeactivateMsg(
+					user1MaciClient,
+					0,
+					maciAccount1,
+					coordPubKey
+				);
 
 				await randomSubmitMsg(
 					user1Client,
