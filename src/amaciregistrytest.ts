@@ -1455,7 +1455,7 @@ export async function amaciregistrytest(roundNum: number) {
 	// 	);
 	// }
 	const start_voting = new Date();
-	const end_voting = new Date(start_voting.getTime() + 300 * 60 * 1000); // 10s
+	const end_voting = new Date(start_voting.getTime() + 1440 * 60 * 1000); // 10s
 
 	for (let i = start; i <= thread; i += 3) {
 		let creator = await generateAccount(0);
