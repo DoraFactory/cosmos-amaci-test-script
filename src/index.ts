@@ -127,7 +127,7 @@ async function main() {
 	// await queryFunc();
 	// await amacitest();
 	// await maciindexertest(100);
-	await amaciregistrytest(300);
+	await amaciregistrytest(12);
 }
 
 main();

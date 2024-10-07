@@ -94,7 +94,7 @@ async function createAMACIRound(
 	const res = await client.createRound({
 		operator,
 		preDeactivateRoot: '0',
-		voiceCreditAmount: '30',
+		voiceCreditAmount: '1000',
 		whitelist,
 		roundInfo: {
 			title: 'Embracing the Uncertainty: A Journey Through Life’s Unexpected Twists and Hidden Opportunities',
@@ -109,7 +109,7 @@ async function createAMACIRound(
 		maxVoter,
 		maxOption,
 		certificationSystem: '0',
-		circuitType: '0',
+		circuitType: '1',
 	});
 	let contractAddress = '';
 	res.events.map(event => {
@@ -227,6 +227,65 @@ export async function randomSubmitMsg(
 			} else {
 				console.error('Unexpected error', err);
 
+				throw err;
+			}
+		}
+	}
+}
+
+export async function batchRevokeWithdraw(
+	client: SigningCosmWasmClient,
+	contractAddress: string,
+	address: string
+) {
+	const msgs: MsgExecuteContractEncodeObject[] = [
+		{
+			typeUrl: '/cosmwasm.wasm.v1.MsgExecuteContract',
+			value: MsgExecuteContract.fromPartial({
+				sender: address,
+				contract: contractAddress,
+				msg: new TextEncoder().encode(
+					JSON.stringify(
+						stringizing({
+							revoke: {},
+						})
+					)
+				),
+			}),
+		},
+		{
+			typeUrl: '/cosmwasm.wasm.v1.MsgExecuteContract',
+			value: MsgExecuteContract.fromPartial({
+				sender: address,
+				contract: contractAddress,
+				msg: new TextEncoder().encode(
+					JSON.stringify(
+						stringizing({
+							withdraw: {},
+						})
+					)
+				),
+			}),
+		},
+	];
+	// const gasPrice = GasPrice.fromString('100000000000peaka');
+	// const fee = calculateFee(20000000 * msgs.length, gasPrice);
+	try {
+		const result = await client.signAndBroadcast(address, msgs, 'auto');
+		return result;
+	} catch (err) {
+		// 将 err 类型显式地转换为 Error
+		if (err instanceof Error) {
+			if (
+				err.message.includes(
+					'You might want to check later. There was a wait of 16 seconds.'
+				)
+			) {
+				console.log(err.message);
+				console.log('skip this error and waiting 16s.');
+				await delay(17000);
+			} else {
+				console.error('Unexpected error', err);
 				throw err;
 			}
 		}
@@ -431,6 +490,26 @@ async function batch_2_amaci_test(
 					},
 				]);
 				console.log(`bond hash: ${bond_res.transactionHash}`);
+				let set_round_info = await creatorMaciClient.setRoundInfo({
+					roundInfo: {
+						title: 'test',
+						description: 'test',
+						link: 'test',
+					},
+				});
+				console.log(
+					`set_round_info hash: ${set_round_info.transactionHash}`
+				);
+
+				let set_res = await creatorMaciClient.setVoteOptionsMap({
+					voteOptionMap: [
+						'Research and Development of AI-Based Smart Home Device Management and Automation Control Systems',
+						'Optimization Platform for Efficient Data Transmission and Fault Tolerance in Large-Scale Distributed Computing',
+						'Application of Multi-Level User Behavior Analysis and Recommendation Algorithms in E-Commerce Platforms',
+						'Security Protocols and Compliance Research for Decentralized Financial Platforms Based on Blockchain Technology',
+						'Optimization of Low-Latency Real-Time Data Transmission and Edge Computing in Next-Generation Network Architecture',
+					],
+				});
 
 				let numSignUp = await user1MaciClient.getNumSignUp();
 				console.log(`start num_sign_ups: ${numSignUp}`); // Expect 0
@@ -1455,7 +1534,7 @@ export async function amaciregistrytest(roundNum: number) {
 	// 	);
 	// }
 	const start_voting = new Date();
-	const end_voting = new Date(start_voting.getTime() + 1440 * 60 * 1000); // 10s
+	const end_voting = new Date(start_voting.getTime() + 120 * 60 * 1000); // 10s
 
 	for (let i = start; i <= thread; i += 3) {
 		let creator = await generateAccount(0);
@@ -1490,61 +1569,61 @@ export async function amaciregistrytest(roundNum: number) {
 		// 	false
 		// );
 
-		console.log('test: amaci 4');
-		await batch_4_amaci_test(
-			creator,
-			operatorList[(i % (operatorList.length * 3)) / 3].operator,
-			user1,
-			user2,
-			user3,
-			user4,
-			user5,
-			user6,
-			user7,
-			user8,
-			user9,
-			user10,
-			user11,
-			user12,
-			operatorList[(i % (operatorList.length * 3)) / 3].pubkey,
-			end_voting,
-			false
-		);
+		// console.log('test: amaci 4');
+		// await batch_4_amaci_test(
+		// 	creator,
+		// 	operatorList[(i % (operatorList.length * 3)) / 3].operator,
+		// 	user1,
+		// 	user2,
+		// 	user3,
+		// 	user4,
+		// 	user5,
+		// 	user6,
+		// 	user7,
+		// 	user8,
+		// 	user9,
+		// 	user10,
+		// 	user11,
+		// 	user12,
+		// 	operatorList[(i % (operatorList.length * 3)) / 3].pubkey,
+		// 	end_voting,
+		// 	false
+		// );
 
-		// // 根据当前批次选择不同的处理函数
-		// if ((i / 3) % 2 === 0) {
-		// 	console.log('test: amaci 2');
-		// 	await batch_2_amaci_test(
-		// 		creator,
-		// 		operatorList[(i % (operatorList.length * 3)) / 3].operator,
-		// 		user1,
-		// 		user2,
-		// 		operatorList[(i % (operatorList.length * 3)) / 3].pubkey,
-		// 		end_voting,
-		// 		false
-		// 	);
-		// } else {
-		// 	console.log('test: amaci 4');
-		// 	console.log('skip amaci 4');
-		// 	// await batch_4_amaci_test(
-		// 	// 	creator,
-		// 	// 	operatorList[(i % (operatorList.length * 3)) / 3].operator,
-		// 	// 	user1,
-		// 	// 	user2,
-		// 	// 	user3,
-		// 	// 	user4,
-		// 	// 	user5,
-		// 	// 	user6,
-		// 	// 	user7,
-		// 	// 	user8,
-		// 	// 	user9,
-		// 	// 	user10,
-		// 	// 	user11,
-		// 	// 	user12,
-		// 	// 	operatorList[(i % (operatorList.length * 3)) / 3].pubkey,
-		// 	// 	end_voting,
-		// 	// 	false
-		// 	// );
-		// }
+		// 根据当前批次选择不同的处理函数
+		if ((i / 3) % 2 === 0) {
+			console.log('test: amaci 2');
+			await batch_2_amaci_test(
+				creator,
+				operatorList[(i % (operatorList.length * 3)) / 3].operator,
+				user1,
+				user2,
+				operatorList[(i % (operatorList.length * 3)) / 3].pubkey,
+				end_voting,
+				false
+			);
+		} else {
+			console.log('test: amaci 4');
+			console.log('skip amaci 4');
+			await batch_4_amaci_test(
+				creator,
+				operatorList[(i % (operatorList.length * 3)) / 3].operator,
+				user1,
+				user2,
+				user3,
+				user4,
+				user5,
+				user6,
+				user7,
+				user8,
+				user9,
+				user10,
+				user11,
+				user12,
+				operatorList[(i % (operatorList.length * 3)) / 3].pubkey,
+				end_voting,
+				false
+			);
+		}
 	}
 }
