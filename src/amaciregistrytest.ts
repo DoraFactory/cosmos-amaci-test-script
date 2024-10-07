@@ -490,26 +490,6 @@ async function batch_2_amaci_test(
 					},
 				]);
 				console.log(`bond hash: ${bond_res.transactionHash}`);
-				let set_round_info = await creatorMaciClient.setRoundInfo({
-					roundInfo: {
-						title: 'test',
-						description: 'test',
-						link: 'test',
-					},
-				});
-				console.log(
-					`set_round_info hash: ${set_round_info.transactionHash}`
-				);
-
-				let set_res = await creatorMaciClient.setVoteOptionsMap({
-					voteOptionMap: [
-						'Research and Development of AI-Based Smart Home Device Management and Automation Control Systems',
-						'Optimization Platform for Efficient Data Transmission and Fault Tolerance in Large-Scale Distributed Computing',
-						'Application of Multi-Level User Behavior Analysis and Recommendation Algorithms in E-Commerce Platforms',
-						'Security Protocols and Compliance Research for Decentralized Financial Platforms Based on Blockchain Technology',
-						'Optimization of Low-Latency Real-Time Data Transmission and Edge Computing in Next-Generation Network Architecture',
-					],
-				});
 
 				let numSignUp = await user1MaciClient.getNumSignUp();
 				console.log(`start num_sign_ups: ${numSignUp}`); // Expect 0
