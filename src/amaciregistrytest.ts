@@ -1,5 +1,6 @@
 import * as fs from 'fs/promises';
 import * as path from 'path';
+
 import {
 	getSignerClient,
 	generateAccount,
@@ -19,6 +20,7 @@ import {
 	calculateFee,
 	MsgSendEncodeObject,
 	SignerData,
+	StdFee,
 } from '@cosmjs/stargate';
 import { DirectSecp256k1HdWallet, OfflineSigner } from '@cosmjs/proto-signing';
 import { HdPath, stringToPath } from '@cosmjs/crypto';
@@ -486,7 +488,7 @@ async function batch_2_amaci_test(
 				let bond_res = await creatorMaciClient.bond('auto', undefined, [
 					{
 						denom: 'peaka',
-						amount: '1000000000000000000',
+						amount: '10000000000000000000',
 					},
 				]);
 				console.log(`bond hash: ${bond_res.transactionHash}`);
@@ -513,9 +515,21 @@ async function batch_2_amaci_test(
 					),
 				};
 				try {
-					let user1_res = await user1MaciClient.signUp({
-						pubkey: pubkey0,
-					});
+					const gasPrice = GasPrice.fromString('100000000000peaka');
+					const signUpFee = calculateFee(60000000, gasPrice);
+
+					const grantFee: StdFee = {
+						amount: signUpFee.amount,
+						gas: signUpFee.gas,
+						granter: contractAddress,
+					};
+
+					let user1_res = await user1MaciClient.signUp(
+						{
+							pubkey: pubkey0,
+						},
+						grantFee
+					);
 					console.log(
 						`user1 signup hash: ${user1_res.transactionHash}`
 					);
