@@ -81,11 +81,13 @@ function waitUntil(endTime: Date): Promise<void> {
 async function createAMACIRound(
 	client: RegistryClient,
 	operator: string,
+	title: string,
 	start_voting: Date,
 	end_voting: Date,
 	maxVoter: string,
 	maxOption: string,
-	whitelist: Whitelist
+	whitelist: Whitelist,
+	circuitType: string
 ) {
 	const start_time = (start_voting.getTime() * 10 ** 6).toString();
 	const end_time = (end_voting.getTime() * 10 ** 6).toString();
@@ -99,7 +101,10 @@ async function createAMACIRound(
 		voiceCreditAmount: '1000',
 		whitelist,
 		roundInfo: {
-			title: 'Embracing the Uncertainty: A Journey Through Life’s Unexpected Twists and Hidden Opportunities',
+			// title: 'Embracing the Uncertainty: A Journey Through Life’s Unexpected Twists and Hidden Opportunities',
+			// title: 'new contract 2-1-1-5 qv with wrong stateIdx: user1: 10, user2: 15',
+			// title: 'new contract 4-2-2-25 1p1v with deactivate msg',
+			title,
 			description:
 				'Life is often compared to a winding road, filled with unexpected turns and hidden challenges. Along this journey, we encounter moments that test our resolve and shape our character. Every step forward, no matter how small, brings us closer to our true purpose. In these quiet, often unnoticed moments, growth happens, and the strength we never knew we had emerges. As we continue down this path, the beauty lies not in the destination, but in the journey itself—the people we meet, the lessons we learn, and the stories we create along the way.',
 			link: 'https://www.google.com',
@@ -111,7 +116,8 @@ async function createAMACIRound(
 		maxVoter,
 		maxOption,
 		certificationSystem: '0',
-		circuitType: '1',
+		// circuitType: '0',
+		circuitType,
 	});
 	let contractAddress = '';
 	res.events.map(event => {
@@ -176,6 +182,84 @@ export async function randomSubmitMsg(
 	// ];
 	const plan = [
 		[1, 1] as [number, number],
+		[2, 2] as [number, number],
+		[3, 3] as [number, number],
+		[4, 10] as [number, number],
+	];
+
+	const payload = batchGenMessage(stateIdx, maciAccount, coordPubKey, plan);
+
+	const msgs: MsgExecuteContractEncodeObject[] = payload.map(
+		({ msg, encPubkeys }) => ({
+			typeUrl: '/cosmwasm.wasm.v1.MsgExecuteContract',
+			value: MsgExecuteContract.fromPartial({
+				sender: address,
+				contract: contractAddress,
+				msg: new TextEncoder().encode(
+					JSON.stringify(
+						stringizing({
+							publish_message: {
+								enc_pub_key: {
+									x: encPubkeys[0],
+									y: encPubkeys[1],
+								},
+								message: {
+									data: msg,
+								},
+							},
+						})
+					)
+				),
+			}),
+		})
+	);
+
+	const gasPrice = GasPrice.fromString('100000000000peaka');
+	const fee = calculateFee(20000000 * msgs.length, gasPrice);
+	try {
+		const result = await client.signAndBroadcast(address, msgs, fee);
+
+		console.log(stateIdx, `pub_msg hash ${result.transactionHash}`);
+		return result;
+	} catch (err) {
+		// 将 err 类型显式地转换为 Error
+		if (err instanceof Error) {
+			if (
+				err.message.includes(
+					'You might want to check later. There was a wait of 16 seconds.'
+				)
+			) {
+				console.log(err.message);
+				console.log('skip this error and waiting 16s.');
+				await delay(17000);
+			} else {
+				console.error('Unexpected error', err);
+
+				throw err;
+			}
+		}
+	}
+}
+
+export async function randomSubmitMsg2(
+	client: SigningCosmWasmClient,
+	contractAddress: string,
+	address: string,
+	stateIdx: number,
+	maciAccount: Account,
+	coordPubKey: PublicKey
+) {
+	/**
+	 * 随机给一个项目投若干票
+	 */
+	// const plan = [
+	// 	[Math.floor(Math.random() * 10), Math.floor(Math.random() * 10)] as [
+	// 		number,
+	// 		number
+	// 	],
+	// ];
+	const plan = [
+		[0, 10] as [number, number],
 		[2, 2] as [number, number],
 		[3, 3] as [number, number],
 		[4, 1] as [number, number],
@@ -362,7 +446,12 @@ async function batch_2_amaci_test(
 	user2: DirectSecp256k1HdWallet,
 	operatorPubkey: string[],
 	end_voting: Date,
-	skipUserOperation: boolean = true
+	skipUserOperation: boolean,
+	title: string,
+	skipDeactivate: boolean,
+	user1StateIdx: number,
+	user2StateIdx: number,
+	circuitType: string
 ) {
 	const pubkeyFilePath = './src/test/user_pubkey.json';
 	const logsFilePath = './src/test/user_logs.json';
@@ -388,8 +477,8 @@ async function batch_2_amaci_test(
 
 	console.log(`Current time: ${start_voting.toLocaleTimeString()}`);
 
-	// const end_voting = new Date(start_voting.getTime() + 8 * 60 * 1000); // 1 小时
-	console.log(`Time after 2 minutes: ${end_voting.toLocaleTimeString()}`);
+	const end_voting_re = new Date(start_voting.getTime() + 12 * 60 * 1000); // 1 小时
+	console.log(`Time after 2 minutes: ${end_voting_re.toLocaleTimeString()}`);
 	// const start_voting = new Date();
 
 	// console.log(`Current time: ${start_voting.toLocaleTimeString()}`);
@@ -405,24 +494,15 @@ async function batch_2_amaci_test(
 		BigInt(operatorPubkey[1]),
 	];
 	console.log('coordPubKey', coordPubKey);
-	// try {
-	// 	contractAddress = await deployContract(
-	// 		operatorClient,
-	// 		operatorPubkey[0],
-	// 		operatorPubkey[1],
-	// 		operatorAddress,
-	// 		start_voting,
-	// 		end_voting
-	// 	);
-	// } catch {}
 
 	while (!contractAddress) {
 		try {
 			contractAddress = await createAMACIRound(
 				registryClient,
 				operator,
+				title,
 				start_voting,
-				end_voting,
+				end_voting_re,
 				'5',
 				'5',
 				{
@@ -434,16 +514,15 @@ async function batch_2_amaci_test(
 							addr: user2Address,
 						},
 					],
-				}
+				},
+				circuitType
 			);
 		} catch (error) {
 			console.log('Deploy failed, retrying...', error);
 			await delay(16000); // 延迟一段时间再重试
 		}
 	}
-	// } catch {
-	// 	console.log('deploy failed.');
-	// }
+
 	await delay(16000);
 
 	if (skipUserOperation === true) {
@@ -464,21 +543,6 @@ async function batch_2_amaci_test(
 				contractAddress
 			);
 
-			// let setVoteOptionsRes = await creatorMaciClient.setVoteOptionsMap({
-			// 	voteOptionMap: [
-			// 		'Research and Development of AI-Based Smart Home Device Management and Automation Control Systems',
-			// 		'Optimization Platform for Efficient Data Transmission and Fault Tolerance in Large-Scale Distributed Computing',
-			// 		'Application of Multi-Level User Behavior Analysis and Recommendation Algorithms in E-Commerce Platforms',
-			// 		'Security Protocols and Compliance Research for Decentralized Financial Platforms Based on Blockchain Technology',
-			// 		'Optimization of Low-Latency Real-Time Data Transmission and Edge Computing in Next-Generation Network Architecture',
-			// 	],
-			// });
-			// console.log(
-			// 	`creator set_vote_option hash: ${setVoteOptionsRes.transactionHash}`
-			// );
-			// await waitUntil(start_voting);
-			// await delay(16000);
-
 			try {
 				let grant_res = await creatorMaciClient.grant({
 					maxAmount: '100000000000000000000000',
@@ -488,7 +552,7 @@ async function batch_2_amaci_test(
 				let bond_res = await creatorMaciClient.bond('auto', undefined, [
 					{
 						denom: 'peaka',
-						amount: '10000000000000000000',
+						amount: '7000000000000000000',
 					},
 				]);
 				console.log(`bond hash: ${bond_res.transactionHash}`);
@@ -511,7 +575,7 @@ async function batch_2_amaci_test(
 						maciAccount2.pubKey[0].toString()
 					),
 					y: uint256FromDecimalString(
-						maciAccount2.pubKey[0].toString()
+						maciAccount2.pubKey[1].toString()
 					),
 				};
 				try {
@@ -578,27 +642,43 @@ async function batch_2_amaci_test(
 					}
 				}
 
-				await randomSubmitDeactivateMsg(
-					user1MaciClient,
-					0,
-					maciAccount1,
-					coordPubKey
+				let user1_pubkey_state_idx = await user1MaciClient.signuped({
+					pubkeyX: maciAccount1.pubKey[0].toString(),
+				});
+				console.log(
+					`user1 pubkey state idx: ${user1_pubkey_state_idx}`
 				);
+				if (skipDeactivate === false) {
+					await randomSubmitDeactivateMsg(
+						user1MaciClient,
+						Number(user1_pubkey_state_idx) - 1,
+						maciAccount1,
+						coordPubKey
+					);
+				}
 
 				await randomSubmitMsg(
 					user1Client,
 					contractAddress,
 					user1Address,
-					0,
+					user1StateIdx,
+					// Number(user1_pubkey_state_idx) - 1,
 					maciAccount1,
 					coordPubKey
 				);
+				let user2_pubkey_state_idx = await user2MaciClient.signuped({
+					pubkeyX: maciAccount2.pubKey[0].toString(),
+				});
+				console.log(
+					`user2 pubkey state idx: ${user2_pubkey_state_idx}`
+				);
 
-				await randomSubmitMsg(
+				await randomSubmitMsg2(
 					user2Client,
 					contractAddress,
 					user2Address,
-					1,
+					user2StateIdx,
+					// Number(user2_pubkey_state_idx) - 1,
 					maciAccount2,
 					coordPubKey
 				);
@@ -609,6 +689,8 @@ async function batch_2_amaci_test(
 			process.exit;
 		}
 	}
+
+	await delay(16000);
 }
 
 async function batch_4_amaci_test(
@@ -628,7 +710,9 @@ async function batch_4_amaci_test(
 	user12: DirectSecp256k1HdWallet,
 	operatorPubkey: string[],
 	end_voting: Date,
-	skipUserOperation: boolean = true
+	skipUserOperation: boolean = true,
+	title: string,
+	circuitType: string
 ) {
 	const pubkeyFilePath = './src/test/user_pubkey.json';
 	const logsFilePath = './src/test/user_logs.json';
@@ -688,9 +772,11 @@ async function batch_4_amaci_test(
 
 	console.log(`Current time: ${start_voting.toLocaleTimeString()}`);
 
+	const end_voting_re = new Date(start_voting.getTime() + 30 * 60 * 1000); // 1 小时
+	console.log(`Time after 2 minutes: ${end_voting_re.toLocaleTimeString()}`);
 	// 增加10s
 	// const end_voting = new Date(start_voting.getTime() + 30 * 60 * 1000); // 10s
-	console.log(`Time after 2 minutes: ${end_voting.toLocaleTimeString()}`);
+	console.log(`Time after 2 minutes: ${end_voting_re.toLocaleTimeString()}`);
 
 	let contractAddress = '';
 	const coordPubKey: PublicKey = [
@@ -704,8 +790,9 @@ async function batch_4_amaci_test(
 			contractAddress = await createAMACIRound(
 				registryClient,
 				operator,
+				title,
 				start_voting,
-				end_voting,
+				end_voting_re,
 				'5',
 				'6',
 				{
@@ -747,7 +834,8 @@ async function batch_4_amaci_test(
 							addr: user12Address,
 						},
 					],
-				}
+				},
+				circuitType
 			);
 		} catch (error) {
 			console.log('Deploy failed, retrying...', error);
@@ -860,7 +948,7 @@ async function batch_4_amaci_test(
 						maciAccount2.pubKey[0].toString()
 					),
 					y: uint256FromDecimalString(
-						maciAccount2.pubKey[0].toString()
+						maciAccount2.pubKey[1].toString()
 					),
 				};
 				try {
@@ -897,7 +985,7 @@ async function batch_4_amaci_test(
 						maciAccount3.pubKey[0].toString()
 					),
 					y: uint256FromDecimalString(
-						maciAccount3.pubKey[0].toString()
+						maciAccount3.pubKey[1].toString()
 					),
 				};
 				try {
@@ -934,7 +1022,7 @@ async function batch_4_amaci_test(
 						maciAccount4.pubKey[0].toString()
 					),
 					y: uint256FromDecimalString(
-						maciAccount4.pubKey[0].toString()
+						maciAccount4.pubKey[1].toString()
 					),
 				};
 				try {
@@ -971,7 +1059,7 @@ async function batch_4_amaci_test(
 						maciAccount5.pubKey[0].toString()
 					),
 					y: uint256FromDecimalString(
-						maciAccount5.pubKey[0].toString()
+						maciAccount5.pubKey[1].toString()
 					),
 				};
 				try {
@@ -1008,7 +1096,7 @@ async function batch_4_amaci_test(
 						maciAccount6.pubKey[0].toString()
 					),
 					y: uint256FromDecimalString(
-						maciAccount6.pubKey[0].toString()
+						maciAccount6.pubKey[1].toString()
 					),
 				};
 				try {
@@ -1045,7 +1133,7 @@ async function batch_4_amaci_test(
 						maciAccount7.pubKey[0].toString()
 					),
 					y: uint256FromDecimalString(
-						maciAccount7.pubKey[0].toString()
+						maciAccount7.pubKey[1].toString()
 					),
 				};
 				try {
@@ -1082,7 +1170,7 @@ async function batch_4_amaci_test(
 						maciAccount8.pubKey[0].toString()
 					),
 					y: uint256FromDecimalString(
-						maciAccount8.pubKey[0].toString()
+						maciAccount8.pubKey[1].toString()
 					),
 				};
 				try {
@@ -1119,7 +1207,7 @@ async function batch_4_amaci_test(
 						maciAccount9.pubKey[0].toString()
 					),
 					y: uint256FromDecimalString(
-						maciAccount9.pubKey[0].toString()
+						maciAccount9.pubKey[1].toString()
 					),
 				};
 				try {
@@ -1156,7 +1244,7 @@ async function batch_4_amaci_test(
 						maciAccount10.pubKey[0].toString()
 					),
 					y: uint256FromDecimalString(
-						maciAccount10.pubKey[0].toString()
+						maciAccount10.pubKey[1].toString()
 					),
 				};
 				try {
@@ -1193,7 +1281,7 @@ async function batch_4_amaci_test(
 						maciAccount11.pubKey[0].toString()
 					),
 					y: uint256FromDecimalString(
-						maciAccount11.pubKey[0].toString()
+						maciAccount11.pubKey[1].toString()
 					),
 				};
 				try {
@@ -1230,7 +1318,7 @@ async function batch_4_amaci_test(
 						maciAccount12.pubKey[0].toString()
 					),
 					y: uint256FromDecimalString(
-						maciAccount12.pubKey[0].toString()
+						maciAccount12.pubKey[1].toString()
 					),
 				};
 				try {
@@ -1332,7 +1420,7 @@ async function batch_4_amaci_test(
 					coordPubKey
 				);
 
-				await randomSubmitMsg(
+				await randomSubmitMsg2(
 					user8Client,
 					contractAddress,
 					user8Address,
@@ -1341,7 +1429,7 @@ async function batch_4_amaci_test(
 					coordPubKey
 				);
 
-				await randomSubmitMsg(
+				await randomSubmitMsg2(
 					user9Client,
 					contractAddress,
 					user9Address,
@@ -1383,6 +1471,8 @@ async function batch_4_amaci_test(
 			process.exit;
 		}
 	}
+
+	await delay(16000);
 }
 
 // async function testDeployContract(
@@ -1528,7 +1618,7 @@ export async function amaciregistrytest(roundNum: number) {
 	// 	);
 	// }
 	const start_voting = new Date();
-	const end_voting = new Date(start_voting.getTime() + 60 * 60 * 1000); // 10s
+	const end_voting = new Date(start_voting.getTime() + 12 * 60 * 1000); // 10s
 
 	for (let i = start; i <= thread; i += 3) {
 		let creator = await generateAccount(0);
@@ -1552,16 +1642,216 @@ export async function amaciregistrytest(roundNum: number) {
 			}`
 		);
 
-		// console.log('test: amaci 2');
-		// await batch_2_amaci_test(
-		// 	creator,
-		// 	operatorList[(i % (operatorList.length * 3)) / 3].operator,
-		// 	user1,
-		// 	user2,
-		// 	operatorList[(i % (operatorList.length * 3)) / 3].pubkey,
-		// 	end_voting,
-		// 	false
-		// );
+		console.log('test: amaci 2');
+		let title = '2-1-1-5 1p1v with deactivate msg';
+		let skipDeactivate = false;
+		let user1StateIdx = 0;
+		let user2StateIdx = 1;
+		let circuitType = '0';
+		await batch_2_amaci_test(
+			creator,
+			operatorList[(i % (operatorList.length * 3)) / 3].operator,
+			user1,
+			user2,
+			operatorList[(i % (operatorList.length * 3)) / 3].pubkey,
+			end_voting,
+			false,
+			title,
+			skipDeactivate,
+			user1StateIdx,
+			user2StateIdx,
+			circuitType
+		);
+
+		title = '2-1-1-5 1p1v';
+		skipDeactivate = true;
+		user1StateIdx = 0;
+		user2StateIdx = 1;
+		circuitType = '0';
+		await batch_2_amaci_test(
+			creator,
+			operatorList[(i % (operatorList.length * 3)) / 3].operator,
+			user1,
+			user2,
+			operatorList[(i % (operatorList.length * 3)) / 3].pubkey,
+			end_voting,
+			false,
+			title,
+			skipDeactivate,
+			user1StateIdx,
+			user2StateIdx,
+			circuitType
+		);
+
+		// title: 'new contract 2-1-1-5 qv with wrong stateIdx: user1: 10, user2: 15',
+		// title: 'new contract 4-2-2-25 1p1v with deactivate msg',
+		title = '2-1-1-5 1p1v with wrong stateIdx: user1: 1, user2: 2';
+		skipDeactivate = true;
+		user1StateIdx = 1;
+		user2StateIdx = 2;
+		circuitType = '0';
+		await batch_2_amaci_test(
+			creator,
+			operatorList[(i % (operatorList.length * 3)) / 3].operator,
+			user1,
+			user2,
+			operatorList[(i % (operatorList.length * 3)) / 3].pubkey,
+			end_voting,
+			false,
+			title,
+			skipDeactivate,
+			user1StateIdx,
+			user2StateIdx,
+			circuitType
+		);
+
+		title = '2-1-1-5 1p1v with wrong stateIdx: user1: 10, user2: 15';
+		skipDeactivate = true;
+		user1StateIdx = 10;
+		user2StateIdx = 15;
+		circuitType = '0';
+		await batch_2_amaci_test(
+			creator,
+			operatorList[(i % (operatorList.length * 3)) / 3].operator,
+			user1,
+			user2,
+			operatorList[(i % (operatorList.length * 3)) / 3].pubkey,
+			end_voting,
+			false,
+			title,
+			skipDeactivate,
+			user1StateIdx,
+			user2StateIdx,
+			circuitType
+		);
+
+		title = '2-1-1-5 qv with deactivate msg';
+		skipDeactivate = false;
+		user1StateIdx = 0;
+		user2StateIdx = 1;
+		circuitType = '1';
+		await batch_2_amaci_test(
+			creator,
+			operatorList[(i % (operatorList.length * 3)) / 3].operator,
+			user1,
+			user2,
+			operatorList[(i % (operatorList.length * 3)) / 3].pubkey,
+			end_voting,
+			false,
+			title,
+			skipDeactivate,
+			user1StateIdx,
+			user2StateIdx,
+			circuitType
+		);
+
+		title = '2-1-1-5 qv';
+		skipDeactivate = true;
+		user1StateIdx = 0;
+		user2StateIdx = 1;
+		circuitType = '1';
+		await batch_2_amaci_test(
+			creator,
+			operatorList[(i % (operatorList.length * 3)) / 3].operator,
+			user1,
+			user2,
+			operatorList[(i % (operatorList.length * 3)) / 3].pubkey,
+			end_voting,
+			false,
+			title,
+			skipDeactivate,
+			user1StateIdx,
+			user2StateIdx,
+			circuitType
+		);
+
+		title = '2-1-1-5 qv with wrong stateIdx: user1: 1, user2: 2';
+		skipDeactivate = true;
+		user1StateIdx = 1;
+		user2StateIdx = 2;
+		circuitType = '1';
+		await batch_2_amaci_test(
+			creator,
+			operatorList[(i % (operatorList.length * 3)) / 3].operator,
+			user1,
+			user2,
+			operatorList[(i % (operatorList.length * 3)) / 3].pubkey,
+			end_voting,
+			false,
+			title,
+			skipDeactivate,
+			user1StateIdx,
+			user2StateIdx,
+			circuitType
+		);
+
+		title = '2-1-1-5 qv with wrong stateIdx: user1: 10, user2: 15';
+		skipDeactivate = true;
+		user1StateIdx = 10;
+		user2StateIdx = 15;
+		circuitType = '1';
+		await batch_2_amaci_test(
+			creator,
+			operatorList[(i % (operatorList.length * 3)) / 3].operator,
+			user1,
+			user2,
+			operatorList[(i % (operatorList.length * 3)) / 3].pubkey,
+			end_voting,
+			false,
+			title,
+			skipDeactivate,
+			user1StateIdx,
+			user2StateIdx,
+			circuitType
+		);
+
+		title = '4-2-2-25 qv with deactivate msg';
+		circuitType = '1';
+		await batch_4_amaci_test(
+			creator,
+			operatorList[(i % (operatorList.length * 3)) / 3].operator,
+			user1,
+			user2,
+			user3,
+			user4,
+			user5,
+			user6,
+			user7,
+			user8,
+			user9,
+			user10,
+			user11,
+			user12,
+			operatorList[(i % (operatorList.length * 3)) / 3].pubkey,
+			end_voting,
+			false,
+			title,
+			circuitType
+		);
+
+		title = '4-2-2-25 1p1v with deactivate msg';
+		circuitType = '0';
+		await batch_4_amaci_test(
+			creator,
+			operatorList[(i % (operatorList.length * 3)) / 3].operator,
+			user1,
+			user2,
+			user3,
+			user4,
+			user5,
+			user6,
+			user7,
+			user8,
+			user9,
+			user10,
+			user11,
+			user12,
+			operatorList[(i % (operatorList.length * 3)) / 3].pubkey,
+			end_voting,
+			false,
+			title,
+			circuitType
+		);
 
 		// console.log('test: amaci 4');
 		// await batch_4_amaci_test(
@@ -1584,40 +1874,40 @@ export async function amaciregistrytest(roundNum: number) {
 		// 	false
 		// );
 
-		// 根据当前批次选择不同的处理函数
-		if ((i / 3) % 2 === 0) {
-			console.log('test: amaci 2');
-			await batch_2_amaci_test(
-				creator,
-				operatorList[(i % (operatorList.length * 3)) / 3].operator,
-				user1,
-				user2,
-				operatorList[(i % (operatorList.length * 3)) / 3].pubkey,
-				end_voting,
-				false
-			);
-		} else {
-			console.log('test: amaci 4');
-			console.log('skip amaci 4');
-			await batch_4_amaci_test(
-				creator,
-				operatorList[(i % (operatorList.length * 3)) / 3].operator,
-				user1,
-				user2,
-				user3,
-				user4,
-				user5,
-				user6,
-				user7,
-				user8,
-				user9,
-				user10,
-				user11,
-				user12,
-				operatorList[(i % (operatorList.length * 3)) / 3].pubkey,
-				end_voting,
-				false
-			);
-		}
+		// // 根据当前批次选择不同的处理函数
+		// if ((i / 3) % 2 === 0) {
+		// 	console.log('test: amaci 2');
+		// 	await batch_2_amaci_test(
+		// 		creator,
+		// 		operatorList[(i % (operatorList.length * 3)) / 3].operator,
+		// 		user1,
+		// 		user2,
+		// 		operatorList[(i % (operatorList.length * 3)) / 3].pubkey,
+		// 		end_voting,
+		// 		false
+		// 	);
+		// } else {
+		// 	console.log('test: amaci 4');
+		// 	console.log('skip amaci 4');
+		// 	await batch_4_amaci_test(
+		// 		creator,
+		// 		operatorList[(i % (operatorList.length * 3)) / 3].operator,
+		// 		user1,
+		// 		user2,
+		// 		user3,
+		// 		user4,
+		// 		user5,
+		// 		user6,
+		// 		user7,
+		// 		user8,
+		// 		user9,
+		// 		user10,
+		// 		user11,
+		// 		user12,
+		// 		operatorList[(i % (operatorList.length * 3)) / 3].pubkey,
+		// 		end_voting,
+		// 		false
+		// 	);
+		// }
 	}
 }
