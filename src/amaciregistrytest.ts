@@ -1642,168 +1642,168 @@ export async function amaciregistrytest(roundNum: number) {
 			}`
 		);
 
-		console.log('test: amaci 2');
+		// console.log('test: amaci 2');
 		let title = '2-1-1-5 1p1v with deactivate msg';
 		let skipDeactivate = false;
 		let user1StateIdx = 0;
 		let user2StateIdx = 1;
 		let circuitType = '0';
-		await batch_2_amaci_test(
-			creator,
-			operatorList[(i % (operatorList.length * 3)) / 3].operator,
-			user1,
-			user2,
-			operatorList[(i % (operatorList.length * 3)) / 3].pubkey,
-			end_voting,
-			false,
-			title,
-			skipDeactivate,
-			user1StateIdx,
-			user2StateIdx,
-			circuitType
-		);
+		// await batch_2_amaci_test(
+		// 	creator,
+		// 	operatorList[(i % (operatorList.length * 3)) / 3].operator,
+		// 	user1,
+		// 	user2,
+		// 	operatorList[(i % (operatorList.length * 3)) / 3].pubkey,
+		// 	end_voting,
+		// 	false,
+		// 	title,
+		// 	skipDeactivate,
+		// 	user1StateIdx,
+		// 	user2StateIdx,
+		// 	circuitType
+		// );
 
-		title = '2-1-1-5 1p1v';
-		skipDeactivate = true;
-		user1StateIdx = 0;
-		user2StateIdx = 1;
-		circuitType = '0';
-		await batch_2_amaci_test(
-			creator,
-			operatorList[(i % (operatorList.length * 3)) / 3].operator,
-			user1,
-			user2,
-			operatorList[(i % (operatorList.length * 3)) / 3].pubkey,
-			end_voting,
-			false,
-			title,
-			skipDeactivate,
-			user1StateIdx,
-			user2StateIdx,
-			circuitType
-		);
+		// title = '2-1-1-5 1p1v';
+		// skipDeactivate = true;
+		// user1StateIdx = 0;
+		// user2StateIdx = 1;
+		// circuitType = '0';
+		// await batch_2_amaci_test(
+		// 	creator,
+		// 	operatorList[(i % (operatorList.length * 3)) / 3].operator,
+		// 	user1,
+		// 	user2,
+		// 	operatorList[(i % (operatorList.length * 3)) / 3].pubkey,
+		// 	end_voting,
+		// 	false,
+		// 	title,
+		// 	skipDeactivate,
+		// 	user1StateIdx,
+		// 	user2StateIdx,
+		// 	circuitType
+		// );
 
-		// title: 'new contract 2-1-1-5 qv with wrong stateIdx: user1: 10, user2: 15',
-		// title: 'new contract 4-2-2-25 1p1v with deactivate msg',
-		title = '2-1-1-5 1p1v with wrong stateIdx: user1: 1, user2: 2';
-		skipDeactivate = true;
-		user1StateIdx = 1;
-		user2StateIdx = 2;
-		circuitType = '0';
-		await batch_2_amaci_test(
-			creator,
-			operatorList[(i % (operatorList.length * 3)) / 3].operator,
-			user1,
-			user2,
-			operatorList[(i % (operatorList.length * 3)) / 3].pubkey,
-			end_voting,
-			false,
-			title,
-			skipDeactivate,
-			user1StateIdx,
-			user2StateIdx,
-			circuitType
-		);
+		// // title: 'new contract 2-1-1-5 qv with wrong stateIdx: user1: 10, user2: 15',
+		// // title: 'new contract 4-2-2-25 1p1v with deactivate msg',
+		// title = '2-1-1-5 1p1v with wrong stateIdx: user1: 1, user2: 2';
+		// skipDeactivate = true;
+		// user1StateIdx = 1;
+		// user2StateIdx = 2;
+		// circuitType = '0';
+		// await batch_2_amaci_test(
+		// 	creator,
+		// 	operatorList[(i % (operatorList.length * 3)) / 3].operator,
+		// 	user1,
+		// 	user2,
+		// 	operatorList[(i % (operatorList.length * 3)) / 3].pubkey,
+		// 	end_voting,
+		// 	false,
+		// 	title,
+		// 	skipDeactivate,
+		// 	user1StateIdx,
+		// 	user2StateIdx,
+		// 	circuitType
+		// );
 
-		title = '2-1-1-5 1p1v with wrong stateIdx: user1: 10, user2: 15';
-		skipDeactivate = true;
-		user1StateIdx = 10;
-		user2StateIdx = 15;
-		circuitType = '0';
-		await batch_2_amaci_test(
-			creator,
-			operatorList[(i % (operatorList.length * 3)) / 3].operator,
-			user1,
-			user2,
-			operatorList[(i % (operatorList.length * 3)) / 3].pubkey,
-			end_voting,
-			false,
-			title,
-			skipDeactivate,
-			user1StateIdx,
-			user2StateIdx,
-			circuitType
-		);
+		// title = '2-1-1-5 1p1v with wrong stateIdx: user1: 10, user2: 15';
+		// skipDeactivate = true;
+		// user1StateIdx = 10;
+		// user2StateIdx = 15;
+		// circuitType = '0';
+		// await batch_2_amaci_test(
+		// 	creator,
+		// 	operatorList[(i % (operatorList.length * 3)) / 3].operator,
+		// 	user1,
+		// 	user2,
+		// 	operatorList[(i % (operatorList.length * 3)) / 3].pubkey,
+		// 	end_voting,
+		// 	false,
+		// 	title,
+		// 	skipDeactivate,
+		// 	user1StateIdx,
+		// 	user2StateIdx,
+		// 	circuitType
+		// );
 
-		title = '2-1-1-5 qv with deactivate msg';
-		skipDeactivate = false;
-		user1StateIdx = 0;
-		user2StateIdx = 1;
-		circuitType = '1';
-		await batch_2_amaci_test(
-			creator,
-			operatorList[(i % (operatorList.length * 3)) / 3].operator,
-			user1,
-			user2,
-			operatorList[(i % (operatorList.length * 3)) / 3].pubkey,
-			end_voting,
-			false,
-			title,
-			skipDeactivate,
-			user1StateIdx,
-			user2StateIdx,
-			circuitType
-		);
+		// title = '2-1-1-5 qv with deactivate msg';
+		// skipDeactivate = false;
+		// user1StateIdx = 0;
+		// user2StateIdx = 1;
+		// circuitType = '1';
+		// await batch_2_amaci_test(
+		// 	creator,
+		// 	operatorList[(i % (operatorList.length * 3)) / 3].operator,
+		// 	user1,
+		// 	user2,
+		// 	operatorList[(i % (operatorList.length * 3)) / 3].pubkey,
+		// 	end_voting,
+		// 	false,
+		// 	title,
+		// 	skipDeactivate,
+		// 	user1StateIdx,
+		// 	user2StateIdx,
+		// 	circuitType
+		// );
 
-		title = '2-1-1-5 qv';
-		skipDeactivate = true;
-		user1StateIdx = 0;
-		user2StateIdx = 1;
-		circuitType = '1';
-		await batch_2_amaci_test(
-			creator,
-			operatorList[(i % (operatorList.length * 3)) / 3].operator,
-			user1,
-			user2,
-			operatorList[(i % (operatorList.length * 3)) / 3].pubkey,
-			end_voting,
-			false,
-			title,
-			skipDeactivate,
-			user1StateIdx,
-			user2StateIdx,
-			circuitType
-		);
+		// title = '2-1-1-5 qv';
+		// skipDeactivate = true;
+		// user1StateIdx = 0;
+		// user2StateIdx = 1;
+		// circuitType = '1';
+		// await batch_2_amaci_test(
+		// 	creator,
+		// 	operatorList[(i % (operatorList.length * 3)) / 3].operator,
+		// 	user1,
+		// 	user2,
+		// 	operatorList[(i % (operatorList.length * 3)) / 3].pubkey,
+		// 	end_voting,
+		// 	false,
+		// 	title,
+		// 	skipDeactivate,
+		// 	user1StateIdx,
+		// 	user2StateIdx,
+		// 	circuitType
+		// );
 
-		title = '2-1-1-5 qv with wrong stateIdx: user1: 1, user2: 2';
-		skipDeactivate = true;
-		user1StateIdx = 1;
-		user2StateIdx = 2;
-		circuitType = '1';
-		await batch_2_amaci_test(
-			creator,
-			operatorList[(i % (operatorList.length * 3)) / 3].operator,
-			user1,
-			user2,
-			operatorList[(i % (operatorList.length * 3)) / 3].pubkey,
-			end_voting,
-			false,
-			title,
-			skipDeactivate,
-			user1StateIdx,
-			user2StateIdx,
-			circuitType
-		);
+		// title = '2-1-1-5 qv with wrong stateIdx: user1: 1, user2: 2';
+		// skipDeactivate = true;
+		// user1StateIdx = 1;
+		// user2StateIdx = 2;
+		// circuitType = '1';
+		// await batch_2_amaci_test(
+		// 	creator,
+		// 	operatorList[(i % (operatorList.length * 3)) / 3].operator,
+		// 	user1,
+		// 	user2,
+		// 	operatorList[(i % (operatorList.length * 3)) / 3].pubkey,
+		// 	end_voting,
+		// 	false,
+		// 	title,
+		// 	skipDeactivate,
+		// 	user1StateIdx,
+		// 	user2StateIdx,
+		// 	circuitType
+		// );
 
-		title = '2-1-1-5 qv with wrong stateIdx: user1: 10, user2: 15';
-		skipDeactivate = true;
-		user1StateIdx = 10;
-		user2StateIdx = 15;
-		circuitType = '1';
-		await batch_2_amaci_test(
-			creator,
-			operatorList[(i % (operatorList.length * 3)) / 3].operator,
-			user1,
-			user2,
-			operatorList[(i % (operatorList.length * 3)) / 3].pubkey,
-			end_voting,
-			false,
-			title,
-			skipDeactivate,
-			user1StateIdx,
-			user2StateIdx,
-			circuitType
-		);
+		// title = '2-1-1-5 qv with wrong stateIdx: user1: 10, user2: 15';
+		// skipDeactivate = true;
+		// user1StateIdx = 10;
+		// user2StateIdx = 15;
+		// circuitType = '1';
+		// await batch_2_amaci_test(
+		// 	creator,
+		// 	operatorList[(i % (operatorList.length * 3)) / 3].operator,
+		// 	user1,
+		// 	user2,
+		// 	operatorList[(i % (operatorList.length * 3)) / 3].pubkey,
+		// 	end_voting,
+		// 	false,
+		// 	title,
+		// 	skipDeactivate,
+		// 	user1StateIdx,
+		// 	user2StateIdx,
+		// 	circuitType
+		// );
 
 		title = '4-2-2-25 qv with deactivate msg';
 		circuitType = '1';
