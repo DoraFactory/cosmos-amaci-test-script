@@ -98,7 +98,7 @@ async function createAMACIRound(
 	const res = await client.createRound({
 		operator,
 		preDeactivateRoot: '0',
-		voiceCreditAmount: '1000',
+		voiceCreditAmount: '120',
 		whitelist,
 		roundInfo: {
 			// title: 'Embracing the Uncertainty: A Journey Through Life’s Unexpected Twists and Hidden Opportunities',
