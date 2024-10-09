@@ -181,10 +181,9 @@ export async function randomSubmitMsg(
 	// 	],
 	// ];
 	const plan = [
-		[1, 1] as [number, number],
-		[2, 2] as [number, number],
-		[3, 3] as [number, number],
-		[4, 10] as [number, number],
+		[3, 2] as [number, number],
+		[4, 3] as [number, number],
+		[5, 10] as [number, number],
 	];
 
 	const payload = batchGenMessage(stateIdx, maciAccount, coordPubKey, plan);
@@ -260,9 +259,9 @@ export async function randomSubmitMsg2(
 	// ];
 	const plan = [
 		[0, 10] as [number, number],
-		[2, 2] as [number, number],
-		[3, 3] as [number, number],
-		[4, 1] as [number, number],
+		[1, 2] as [number, number],
+		[2, 3] as [number, number],
+		// [4, 1] as [number, number],
 	];
 
 	const payload = batchGenMessage(stateIdx, maciAccount, coordPubKey, plan);
