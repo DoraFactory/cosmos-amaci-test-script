@@ -18,17 +18,19 @@ dotenv.config();
 
 // export const rpcEndpoint = 'https://vota-rpc.dorafactory.org';
 // export const restEndpoint = 'https://vota-rest.dorafactory.org';
+// export const apiEndpoint = 'https://vota-api.dorafactory.org';
 // export const chainId = 'vota-ash';
 
-// export const rpcEndpoint = 'https://vota-testnet-rpc.dorafactory.org';
-// export const restEndpoint = 'https://vota-testnet-rest.dorafactory.org';
+export const rpcEndpoint = 'https://vota-testnet-rpc.dorafactory.org';
+export const restEndpoint = 'https://vota-testnet-rest.dorafactory.org';
+export const apiEndpoint = 'https://vota-api.dorafactory.org';
+export const qfApiEndpoint = 'https://aez-api.dorafactory.org';
+export const chainId = 'vota-testnet';
+
+// export const rpcEndpoint = 'http://127.0.0.1:26657';
+// export const restEndpoint = 'http://127.0.0.1:1317';
 // export const apiEndpoint = 'http://3.0.94.169:3000/';
 // export const chainId = 'vota-testnet';
-
-export const rpcEndpoint = 'http://127.0.0.1:26657';
-export const restEndpoint = 'http://127.0.0.1:1317';
-export const apiEndpoint = 'http://3.0.94.169:3000/';
-export const chainId = 'vota-testnet';
 
 // export const rpcEndpoint = 'https://vota-sf-rpc.dorafactory.org/';
 // export const restEndpoint = 'https://vota-sf-rest.dorafactory.org/';
@@ -39,7 +41,7 @@ export const prefix = 'dora';
 
 // export const mnemonic = // dora1t58t7azqzq26406uwehgnfekal5kzym3m9lz4k
 
-export const signerAddress = 'dora1f0cywn02dm63xl52kw8r9myu5lelxfxd7zrqan';
+export const signerAddress = 'dora12c8lpjqrpjzlawx8g4xe873umy4e6vr5atqzhn';
 export const contractAddress =
 	'dora1suhgf5svhu4usrurvxzlgn54ksxmn8gljarjtxqnapv8kjnp4nrscxqr5v';
 // 'dora1wdnc37yzmjvxksq89wdxwug0knuxau73ume3h6afngsmzsztsvwqggaxl2';
@@ -56,11 +58,12 @@ export const defaultCoordPubKey = [
 
 export const registryContractAddress =
 	'dora13c8aecstyxrhax9znvvh5zey89edrmd2k5va57pxvpe3fxtfsfeqlhsjnd';
+// 'dora1smg5qp5trjdkcekdjssqpjehdjf6n4cjss0clyvqcud3t3u3948s8rmgg4';
 
 /** Setting to speed up testing */
 const defaultSigningClientOptions: SigningStargateClientOptions = {
 	broadcastPollIntervalMs: 8_000,
-	broadcastTimeoutMs: 16_000,
+	broadcastTimeoutMs: 32_000,
 	gasPrice: GasPrice.fromString('100000000000peaka'),
 };
 

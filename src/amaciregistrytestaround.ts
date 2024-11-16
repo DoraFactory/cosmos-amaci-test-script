@@ -518,12 +518,19 @@ async function batch_2_amaci_test(
 
 	const base_time = new Date();
 	// const start_voting = new Date(base_time.getTime() + 2 * 60 * 1000); // 10 分钟
-	const start_voting = new Date(base_time.getTime() + 2 * 60 * 1000); // 10 分钟
+	const start_voting = new Date(base_time.getTime()); // 10 分钟
 
 	console.log(`Current time: ${start_voting.toLocaleTimeString()}`);
 
 	const end_voting_re = new Date(start_voting.getTime() + 12 * 60 * 1000); // 1 小时
 	console.log(`Time after 2 minutes: ${end_voting_re.toLocaleTimeString()}`);
+	// const start_voting = new Date();
+
+	// console.log(`Current time: ${start_voting.toLocaleTimeString()}`);
+
+	// // 增加10s
+	// const end_voting = new Date(start_voting.getTime() + 10 * 60 * 1000); // 10s
+	// console.log(`Time after 2 minutes: ${end_voting.toLocaleTimeString()}`);
 
 	let contractAddress = '';
 	// try {
@@ -561,31 +568,6 @@ async function batch_2_amaci_test(
 		}
 	}
 
-	await delay(6000);
-	let creatorAMaciClient = await getAMaciClientBy(creator, contractAddress);
-
-	let setRoundInfoRes = await creatorAMaciClient.setRoundInfo({
-		roundInfo: {
-			title: 'new ' + title,
-			description: 'new description',
-			link: 'https://new.com',
-		},
-	});
-	console.log(`setRoundInfoRes: ${setRoundInfoRes.transactionHash}`);
-	await delay(6000);
-	let setVoteOptionsMapRes = await creatorAMaciClient.setVoteOptionsMap({
-		voteOptionMap: [
-			'new option1',
-			'new option2',
-			'new option3',
-			'new option4',
-			'new option5',
-		],
-	});
-	console.log(
-		`setVoteOptionsMapRes: ${setVoteOptionsMapRes.transactionHash}`
-	);
-	await waitUntil(start_voting);
 	await delay(16000);
 
 	if (skipUserOperation === true) {
@@ -831,11 +813,11 @@ async function batch_4_amaci_test(
 
 	const base_time = new Date();
 	// const start_voting = new Date(base_time.getTime() + 2 * 60 * 1000); // 10 分钟
-	const start_voting = new Date(base_time.getTime() + 2 * 60 * 1000); // 10 分钟
+	const start_voting = new Date(base_time.getTime()); // 10 分钟
 
 	console.log(`Current time: ${start_voting.toLocaleTimeString()}`);
 
-	const end_voting_re = new Date(start_voting.getTime() + 32 * 60 * 1000); // 1 小时
+	const end_voting_re = new Date(start_voting.getTime() + 30 * 60 * 1000); // 1 小时
 	console.log(`Time after 2 minutes: ${end_voting_re.toLocaleTimeString()}`);
 	// 增加10s
 	// const end_voting = new Date(start_voting.getTime() + 30 * 60 * 1000); // 10s
@@ -905,35 +887,6 @@ async function batch_4_amaci_test(
 			await delay(16000); // 延迟一段时间再重试
 		}
 	}
-
-	await delay(6000);
-	let creatorAMaciClient = await getAMaciClientBy(creator, contractAddress);
-
-	let setRoundInfoRes = await creatorAMaciClient.setRoundInfo({
-		roundInfo: {
-			title: 'new ' + title,
-			description: 'new description',
-			link: 'https://new.com',
-		},
-	});
-	console.log(`setRoundInfoRes: ${setRoundInfoRes.transactionHash}`);
-	await delay(6000);
-	let setVoteOptionsMapRes = await creatorAMaciClient.setVoteOptionsMap({
-		voteOptionMap: [
-			'new option1',
-			'new option2',
-			'new option3',
-			'new option4',
-			'new option5',
-			'new option6',
-		],
-	});
-	console.log(
-		`setVoteOptionsMapRes: ${setVoteOptionsMapRes.transactionHash}`
-	);
-	await waitUntil(start_voting);
-	await delay(16000);
-
 	if (skipUserOperation === true) {
 		console.log('skip user operation');
 	} else {
@@ -1585,34 +1538,135 @@ export async function amaciregistrytest(roundNum: number) {
 	// await batchSendBig(accountAddresslist.slice(0, 2));
 	// await delay(10000);
 
+	// let operatorList = [
+	// 	// {
+	// 	//      operator: 'dora15yfyalf872yut8cecy8p2j7rer9dd98rlg3xtq',
+	// 	//      pubkey: [
+	// 	//              '7421895562686352826563669933550830041677218724210020561066263498415701325176',
+	// 	//              '15885728170420100812951141355295788125825926252169931895803773048587171524289',
+	// 	//      ],
+	// 	// },
+
+	// 	{
+	// 		operator: 'dora149n5yhzgk5gex0eqmnnpnsxh6ys4exg5xyqjzm',
+	// 		pubkey: [
+	// 			'3457695696360848193502608246254422070002779638488733236214423797131720399296',
+	// 			'10721319678265866063861912417916780787229942812531198850410477756757845824096',
+	// 		],
+	// 	},
+	// 	{
+	// 		operator: 'dora1zrd68hgj5uzqpm5x8v6pylwqjsnltp6nyr8s0k',
+	// 		pubkey: [
+	// 			'5424741844275630152950028819860276183538330999940395309613975245790840672621',
+	// 			'6821363586466624930174394695023126212730779300840339744873622125361194404156',
+	// 		],
+	// 	},
+	// 	{
+	// 		operator: 'dora1k383vky62t85496xwp6qnalw5u2qj4tvsneluc',
+	// 		pubkey: [
+	// 			'339457423059495574326820494023899998621467676828017937021309840270576858799',
+	// 			'4138216818137880315912826301418122715579481744260360896824552739285524788661',
+	// 		],
+	// 	},
+	// ];
+
 	let operatorList = [
 		// {
-		//      operator: 'dora15yfyalf872yut8cecy8p2j7rer9dd98rlg3xtq',
-		//      pubkey: [
-		//              '7421895562686352826563669933550830041677218724210020561066263498415701325176',
-		//              '15885728170420100812951141355295788125825926252169931895803773048587171524289',
-		//      ],
+		// 	operator: 'dora1cw3wf6lxddx498ga9v4jdrragf2zhjx455cku3',
+		// 	pubkey: [
+		// 		'4417857533698907802458937167572830658299030035842689506659910759118885164852',
+		// 		'18398139698235724775231612555438742459611017534174266711720047667402937434969',
+		// 	],
 		// },
-
+		// {
+		// 	operator: 'dora1j7yxvcynp95c9dwzzz78f5xlkj94xpt3mql2hq',
+		// 	pubkey: [
+		// 		'17369417334654652281073855690665607587368618936444350938621925111810050191392',
+		// 		'11116634654164812410195077865352436834368955827446872641119763763006362822345',
+		// 	],
+		// },
+		// {
+		// 	operator: 'dora14lst9pkx3mwlr3m0gxsrundflnsqkd27x27kmc',
+		// 	pubkey: [
+		// 		'19433940172816315444685116295647994756296924976491102058257283846008830173474',
+		// 		'15959567042037372324855002189850335378643391886048730588847287049569054991662',
+		// 	],
+		// },
+		// {
+		// 	operator: 'dora12ch7slkdtlk9fmm348qmfdclzeqw8ntrj3wq7c', // Citadel.one
+		// 	pubkey: [
+		// 		'6287930297913945282978887922669223325878689345894298410069300652806691204142',
+		// 		'1097175243062458227150725018049984303100392784363262430579271971998185183929',
+		// 	],
+		// },
 		{
-			operator: 'dora149n5yhzgk5gex0eqmnnpnsxh6ys4exg5xyqjzm',
+			operator: 'dora16nkezrnvw9fzqqqmmqtrdkw3pqes6qthhse2k4', // Dora Factory
 			pubkey: [
-				'3457695696360848193502608246254422070002779638488733236214423797131720399296',
-				'10721319678265866063861912417916780787229942812531198850410477756757845824096',
+				'1815360346961449660304628500630863783773328239515529681920310230078929610635',
+				'1543204810362218394850028913632376147290317641442164443830849121941234286792',
 			],
 		},
 		{
-			operator: 'dora1zrd68hgj5uzqpm5x8v6pylwqjsnltp6nyr8s0k',
+			operator: 'dora1zgkjgh2ylxnq7x3v5cws4e2tzszn34yy7tee6w', // Dora Ventures
 			pubkey: [
-				'5424741844275630152950028819860276183538330999940395309613975245790840672621',
-				'6821363586466624930174394695023126212730779300840339744873622125361194404156',
+				'10969241262411761017104078252396795671990154867469832050719006547208752421806',
+				'18442691397917891858727958831345150138795621884110620041478625337723969259353',
 			],
 		},
 		{
-			operator: 'dora1k383vky62t85496xwp6qnalw5u2qj4tvsneluc',
+			operator: 'dora1nddnr2fjcupt3eher59mrp0cmwn52e4c98y4k5',
 			pubkey: [
-				'339457423059495574326820494023899998621467676828017937021309840270576858799',
-				'4138216818137880315912826301418122715579481744260360896824552739285524788661',
+				'11043362857411207101295473092701542792077153813505230615881421921648274746246',
+				'3431336307758495332528815819065155244352578928861293932308944643929528727389',
+			],
+		},
+		{
+			operator: 'dora1wwxceywj7ja3n035w0x94nsr4udyf4mw2jgyrr',
+			pubkey: [
+				'11978457659628044082619754133110456565484171271573638805501556808649565797391',
+				'17617391654650568936014542367907682392252640817518365969346802072098886141441',
+			],
+		},
+		{
+			operator: 'dora1hghmu7zapyzzgnqxhqckzd0y00envqe9g2w2du',
+			pubkey: [
+				'17435182746053293007942830428304767502578289201180417325365913156635374538387',
+				'11099816916496136858818144201886975724812612212734072177889711695320139386392',
+			],
+		},
+		{
+			operator: 'dora1zjzm7rwmum7p0vdvhyql8hstk3d8p8wxtd7rep',
+			pubkey: [
+				'20211487500471801899049648863556940225753211748448072695910082357606933345218',
+				'754988664436737478127212310497220463618756945220078784776032979093485613910',
+			],
+		},
+		{
+			operator: 'dora1cq99fd447q8xdp8u99sdjuw7udzyhzpw5eg2d3',
+			pubkey: [
+				'1698921379599390399065843848651873934863165648052076964844264692772428470751',
+				'15172997820160411826967959117929439905605183535674057390659351412068202152356',
+			],
+		},
+		{
+			operator: 'dora1ahu6cpk29rd2yqw3c53l0tjsc9w0q7xf5p9e8u',
+			pubkey: [
+				'4924348282548225552684197393994499100391152173243253655016296875428630196340',
+				'18465950528022514058363885629656919648755871361551640959680463154520937761720',
+			],
+		},
+		{
+			operator: 'dora1mmz80knqzxal8pke747ty46nlaysvls7rw2yje',
+			pubkey: [
+				'11432490644815648309193414735260744748222413562660360907232756557595891488306',
+				'17837933442863038387726990400128196241219401479812161784932583056242445933808',
+			],
+		},
+		{
+			operator: 'dora1w8skpx06l5zmrp5pvj0fa49zcsnwhvtxyhfr8v', // ZKV
+			pubkey: [
+				'1447136561555038286186759509586332431076499146392616437011550399381420797094',
+				'4489922528030912429989527073875552800014544988121241929299373324515078932919',
 			],
 		},
 	];
@@ -1649,47 +1703,25 @@ export async function amaciregistrytest(roundNum: number) {
 		let user1StateIdx = 0;
 		let user2StateIdx = 1;
 		let circuitType = '0';
-		await batch_2_amaci_test(
-			creator,
-			operatorList[(i % (operatorList.length * 3)) / 3].operator,
-			user1,
-			user2,
-			operatorList[(i % (operatorList.length * 3)) / 3].pubkey,
-			end_voting,
-			false,
-			title,
-			skipDeactivate,
-			user1StateIdx,
-			user2StateIdx,
-			circuitType
-		);
+		// await batch_2_amaci_test(
+		// 	creator,
+		// 	operatorList[(i % (operatorList.length * 3)) / 3].operator,
+		// 	user1,
+		// 	user2,
+		// 	operatorList[(i % (operatorList.length * 3)) / 3].pubkey,
+		// 	end_voting,
+		// 	false,
+		// 	title,
+		// 	skipDeactivate,
+		// 	user1StateIdx,
+		// 	user2StateIdx,
+		// 	circuitType
+		// );
 
-		title = '2-1-1-5 1p1v';
-		skipDeactivate = true;
-		user1StateIdx = 0;
-		user2StateIdx = 1;
-		circuitType = '0';
-		await batch_2_amaci_test(
-			creator,
-			operatorList[(i % (operatorList.length * 3)) / 3].operator,
-			user1,
-			user2,
-			operatorList[(i % (operatorList.length * 3)) / 3].pubkey,
-			end_voting,
-			false,
-			title,
-			skipDeactivate,
-			user1StateIdx,
-			user2StateIdx,
-			circuitType
-		);
-
-		// // title: 'new contract 2-1-1-5 qv with wrong stateIdx: user1: 10, user2: 15',
-		// // title: 'new contract 4-2-2-25 1p1v with deactivate msg',
-		// title = '2-1-1-5 1p1v with wrong stateIdx: user1: 1, user2: 2';
+		// title = '2-1-1-5 1p1v';
 		// skipDeactivate = true;
-		// user1StateIdx = 1;
-		// user2StateIdx = 2;
+		// user1StateIdx = 0;
+		// user2StateIdx = 1;
 		// circuitType = '0';
 		// await batch_2_amaci_test(
 		// 	creator,
@@ -1706,11 +1738,53 @@ export async function amaciregistrytest(roundNum: number) {
 		// 	circuitType
 		// );
 
-		// title = '2-1-1-5 1p1v with wrong stateIdx: user1: 10, user2: 15';
-		// skipDeactivate = true;
-		// user1StateIdx = 10;
-		// user2StateIdx = 15;
-		// circuitType = '0';
+		// // // title: 'new contract 2-1-1-5 qv with wrong stateIdx: user1: 10, user2: 15',
+		// // // title: 'new contract 4-2-2-25 1p1v with deactivate msg',
+		// // title = '2-1-1-5 1p1v with wrong stateIdx: user1: 1, user2: 2';
+		// // skipDeactivate = true;
+		// // user1StateIdx = 1;
+		// // user2StateIdx = 2;
+		// // circuitType = '0';
+		// // await batch_2_amaci_test(
+		// // 	creator,
+		// // 	operatorList[(i % (operatorList.length * 3)) / 3].operator,
+		// // 	user1,
+		// // 	user2,
+		// // 	operatorList[(i % (operatorList.length * 3)) / 3].pubkey,
+		// // 	end_voting,
+		// // 	false,
+		// // 	title,
+		// // 	skipDeactivate,
+		// // 	user1StateIdx,
+		// // 	user2StateIdx,
+		// // 	circuitType
+		// // );
+
+		// // title = '2-1-1-5 1p1v with wrong stateIdx: user1: 10, user2: 15';
+		// // skipDeactivate = true;
+		// // user1StateIdx = 10;
+		// // user2StateIdx = 15;
+		// // circuitType = '0';
+		// // await batch_2_amaci_test(
+		// // 	creator,
+		// // 	operatorList[(i % (operatorList.length * 3)) / 3].operator,
+		// // 	user1,
+		// // 	user2,
+		// // 	operatorList[(i % (operatorList.length * 3)) / 3].pubkey,
+		// // 	end_voting,
+		// // 	false,
+		// // 	title,
+		// // 	skipDeactivate,
+		// // 	user1StateIdx,
+		// // 	user2StateIdx,
+		// // 	circuitType
+		// // );
+
+		// title = '2-1-1-5 qv with deactivate msg';
+		// skipDeactivate = false;
+		// user1StateIdx = 0;
+		// user2StateIdx = 1;
+		// circuitType = '1';
 		// await batch_2_amaci_test(
 		// 	creator,
 		// 	operatorList[(i % (operatorList.length * 3)) / 3].operator,
@@ -1725,26 +1799,6 @@ export async function amaciregistrytest(roundNum: number) {
 		// 	user2StateIdx,
 		// 	circuitType
 		// );
-
-		title = '2-1-1-5 qv with deactivate msg';
-		skipDeactivate = false;
-		user1StateIdx = 0;
-		user2StateIdx = 1;
-		circuitType = '1';
-		await batch_2_amaci_test(
-			creator,
-			operatorList[(i % (operatorList.length * 3)) / 3].operator,
-			user1,
-			user2,
-			operatorList[(i % (operatorList.length * 3)) / 3].pubkey,
-			end_voting,
-			false,
-			title,
-			skipDeactivate,
-			user1StateIdx,
-			user2StateIdx,
-			circuitType
-		);
 
 		title = '2-1-1-5 qv';
 		skipDeactivate = true;
@@ -1766,93 +1820,114 @@ export async function amaciregistrytest(roundNum: number) {
 			circuitType
 		);
 
-		// title = '2-1-1-5 qv with wrong stateIdx: user1: 1, user2: 2';
-		// skipDeactivate = true;
-		// user1StateIdx = 1;
-		// user2StateIdx = 2;
+		// // title = '2-1-1-5 qv with wrong stateIdx: user1: 1, user2: 2';
+		// // skipDeactivate = true;
+		// // user1StateIdx = 1;
+		// // user2StateIdx = 2;
+		// // circuitType = '1';
+		// // await batch_2_amaci_test(
+		// // 	creator,
+		// // 	operatorList[(i % (operatorList.length * 3)) / 3].operator,
+		// // 	user1,
+		// // 	user2,
+		// // 	operatorList[(i % (operatorList.length * 3)) / 3].pubkey,
+		// // 	end_voting,
+		// // 	false,
+		// // 	title,
+		// // 	skipDeactivate,
+		// // 	user1StateIdx,
+		// // 	user2StateIdx,
+		// // 	circuitType
+		// // );
+
+		// // title = '2-1-1-5 qv with wrong stateIdx: user1: 10, user2: 15';
+		// // skipDeactivate = true;
+		// // user1StateIdx = 10;
+		// // user2StateIdx = 15;
+		// // circuitType = '1';
+		// // await batch_2_amaci_test(
+		// // 	creator,
+		// // 	operatorList[(i % (operatorList.length * 3)) / 3].operator,
+		// // 	user1,
+		// // 	user2,
+		// // 	operatorList[(i % (operatorList.length * 3)) / 3].pubkey,
+		// // 	end_voting,
+		// // 	false,
+		// // 	title,
+		// // 	skipDeactivate,
+		// // 	user1StateIdx,
+		// // 	user2StateIdx,
+		// // 	circuitType
+		// // );
+
+		// title = '4-2-2-25 qv with deactivate msg';
 		// circuitType = '1';
-		// await batch_2_amaci_test(
+		// await batch_4_amaci_test(
 		// 	creator,
 		// 	operatorList[(i % (operatorList.length * 3)) / 3].operator,
 		// 	user1,
 		// 	user2,
+		// 	user3,
+		// 	user4,
+		// 	user5,
+		// 	user6,
+		// 	user7,
+		// 	user8,
+		// 	user9,
+		// 	user10,
+		// 	user11,
+		// 	user12,
 		// 	operatorList[(i % (operatorList.length * 3)) / 3].pubkey,
 		// 	end_voting,
 		// 	false,
 		// 	title,
-		// 	skipDeactivate,
-		// 	user1StateIdx,
-		// 	user2StateIdx,
 		// 	circuitType
 		// );
 
-		// title = '2-1-1-5 qv with wrong stateIdx: user1: 10, user2: 15';
-		// skipDeactivate = true;
-		// user1StateIdx = 10;
-		// user2StateIdx = 15;
-		// circuitType = '1';
-		// await batch_2_amaci_test(
+		// title = '4-2-2-25 1p1v with deactivate msg';
+		// circuitType = '0';
+		// await batch_4_amaci_test(
 		// 	creator,
 		// 	operatorList[(i % (operatorList.length * 3)) / 3].operator,
 		// 	user1,
 		// 	user2,
+		// 	user3,
+		// 	user4,
+		// 	user5,
+		// 	user6,
+		// 	user7,
+		// 	user8,
+		// 	user9,
+		// 	user10,
+		// 	user11,
+		// 	user12,
 		// 	operatorList[(i % (operatorList.length * 3)) / 3].pubkey,
 		// 	end_voting,
 		// 	false,
 		// 	title,
-		// 	skipDeactivate,
-		// 	user1StateIdx,
-		// 	user2StateIdx,
 		// 	circuitType
 		// );
 
-		title = '4-2-2-25 qv with deactivate msg';
-		circuitType = '1';
-		await batch_4_amaci_test(
-			creator,
-			operatorList[(i % (operatorList.length * 3)) / 3].operator,
-			user1,
-			user2,
-			user3,
-			user4,
-			user5,
-			user6,
-			user7,
-			user8,
-			user9,
-			user10,
-			user11,
-			user12,
-			operatorList[(i % (operatorList.length * 3)) / 3].pubkey,
-			end_voting,
-			false,
-			title,
-			circuitType
-		);
-
-		title = '4-2-2-25 1p1v with deactivate msg';
-		circuitType = '0';
-		await batch_4_amaci_test(
-			creator,
-			operatorList[(i % (operatorList.length * 3)) / 3].operator,
-			user1,
-			user2,
-			user3,
-			user4,
-			user5,
-			user6,
-			user7,
-			user8,
-			user9,
-			user10,
-			user11,
-			user12,
-			operatorList[(i % (operatorList.length * 3)) / 3].pubkey,
-			end_voting,
-			false,
-			title,
-			circuitType
-		);
+		// console.log('test: amaci 4');
+		// await batch_4_amaci_test(
+		// 	creator,
+		// 	operatorList[(i % (operatorList.length * 3)) / 3].operator,
+		// 	user1,
+		// 	user2,
+		// 	user3,
+		// 	user4,
+		// 	user5,
+		// 	user6,
+		// 	user7,
+		// 	user8,
+		// 	user9,
+		// 	user10,
+		// 	user11,
+		// 	user12,
+		// 	operatorList[(i % (operatorList.length * 3)) / 3].pubkey,
+		// 	end_voting,
+		// 	false
+		// );
 
 		// // 根据当前批次选择不同的处理函数
 		// if ((i / 3) % 2 === 0) {

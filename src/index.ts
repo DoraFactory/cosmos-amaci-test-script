@@ -31,6 +31,8 @@ import { amaciusertest } from './amaciusertest';
 import { queryFunc } from './query';
 import { maciindexertest } from './maciindexertest';
 import { amaciregistrytest } from './amaciregistrytest';
+import { queryVoters } from './query-dora-account';
+import { queryQfVoters } from './query-qf-account';
 
 type DelegatorData = {
 	id: number;
@@ -127,7 +129,9 @@ async function main() {
 	// await queryFunc();
 	// await amacitest();
 	// await maciindexertest(100);
-	await amaciregistrytest(1);
+	// await amaciregistrytest(1);
+	// await queryVoters();
+	await queryQfVoters();
 }
 
 main();
