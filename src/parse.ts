@@ -20,20 +20,27 @@ function mergeAndDeduplicate() {
 		// 读取两个文件中的地址
 		const maciAddresses = readAddressesFromCsv('maci-voters.csv');
 		const qfAddresses = readAddressesFromCsv('qf-voters.csv');
+		const doraAddresses = readAddressesFromCsv('dora-delegators.csv');
 
 		// 合并地址并去重
-		const allAddresses = [...new Set([...maciAddresses, ...qfAddresses])];
+		const allAddresses = [
+			...new Set([...maciAddresses, ...qfAddresses, ...doraAddresses]),
+		];
 
 		// 创建新的 CSV 内容
 		const csvContent = 'address\n' + allAddresses.join('\n');
 
 		// 写入新文件
-		const outputPath = path.join(__dirname, 'merged-unique-voters.csv');
+		const outputPath = path.join(
+			__dirname,
+			'merged-unique-voters-with-delegators.csv'
+		);
 		fs.writeFileSync(outputPath, csvContent);
 
 		console.log(`处理完成！共计 ${allAddresses.length} 个唯一地址`);
 		console.log(`原始 MACI 地址数量: ${maciAddresses.length}`);
 		console.log(`原始 QF 地址数量: ${qfAddresses.length}`);
+		console.log(`原始 Dora 地址数量: ${doraAddresses.length}`);
 		console.log(`输出文件保存在: ${outputPath}`);
 	} catch (error) {
 		console.error('处理过程中发生错误:', error);
