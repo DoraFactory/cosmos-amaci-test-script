@@ -16,16 +16,16 @@ import * as dotenv from 'dotenv';
 import { RegistryClient } from './ts/Registry.client';
 dotenv.config();
 
-// export const rpcEndpoint = 'https://vota-rpc.dorafactory.org';
-// export const restEndpoint = 'https://vota-rest.dorafactory.org';
-// export const apiEndpoint = 'https://vota-api.dorafactory.org';
-// export const chainId = 'vota-ash';
-
-export const rpcEndpoint = 'https://vota-testnet-rpc.dorafactory.org';
-export const restEndpoint = 'https://vota-testnet-rest.dorafactory.org';
+export const rpcEndpoint = 'https://vota-rpc.dorafactory.org';
+export const restEndpoint = 'https://vota-rest.dorafactory.org';
 export const apiEndpoint = 'https://vota-api.dorafactory.org';
+export const chainId = 'vota-ash';
+
+// export const rpcEndpoint = 'https://vota-testnet-rpc.dorafactory.org';
+// export const restEndpoint = 'https://vota-testnet-rest.dorafactory.org';
+// export const apiEndpoint = 'https://vota-testnet-api.dorafactory.org';
 export const qfApiEndpoint = 'https://aez-api.dorafactory.org';
-export const chainId = 'vota-testnet';
+// export const chainId = 'vota-testnet';
 
 // export const rpcEndpoint = 'http://127.0.0.1:26657';
 // export const restEndpoint = 'http://127.0.0.1:1317';
@@ -63,7 +63,7 @@ export const registryContractAddress =
 /** Setting to speed up testing */
 const defaultSigningClientOptions: SigningStargateClientOptions = {
 	broadcastPollIntervalMs: 8_000,
-	broadcastTimeoutMs: 32_000,
+	broadcastTimeoutMs: 64_000,
 	gasPrice: GasPrice.fromString('100000000000peaka'),
 };
 

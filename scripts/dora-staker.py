@@ -78,8 +78,10 @@ def query_delegators(validator_address):
     dup_list = []
     length = 0
     
-    address_list = []
+    address_list_all = []
     
+    # address_list_stake_blow_5000 = [] # 质押低于5000
+    # address_list_stake_above_5000 = [] # 质押高于5000 >= 5000
     while True:
         print(f"当前页面数据数量: {len(validator_delegators['delegation_responses'])}")
         
@@ -97,8 +99,18 @@ def query_delegators(validator_address):
                 index_data[delegator_address] += 1
             else:
                 index_data[delegator_address] = 1
-        
-            address_list.append(delegator_address)
+            address_list_all.append({
+                'address': delegator_address,
+                'amount': amount,
+            })
+            # print(delegator_address)
+            # print(amount)
+            # print(int(amount))
+            # address_list_all.append(delegator_address)
+            # if int(amount) < 5000*10**18:
+            #     address_list_stake_blow_5000.append(delegator_address)
+            # else:
+            #     address_list_stake_above_5000.append(delegator_address)
             
         # 将重复记录的写入移到这里，每一页处理完后就写入
         if dup_list:
@@ -122,22 +134,44 @@ def query_delegators(validator_address):
             if validator_delegators == None:
                 print('try waiting... 2')
 
-    return address_list
+    return address_list_all
 if __name__ == "__main__":
     validators_data = list_validators_data()
     print(len(validators_data))
     print(validators_data)
-    delegators_list = []
+    delegators_list_all = []
     for validator in validators_data:
-        delegators = query_delegators(validator_address=validator['operator_address'])
-        delegators_list.extend(delegators)
+        delegators_all = query_delegators(validator_address=validator['operator_address'])
+        delegators_list_all.extend(delegators_all)
+    stake_summary = {}
+    for delegator in delegators_list_all:
+        # 假设每个delegator都有一个stake数量的属性
+        stake_amount = delegator.get('amount', 0)  # 获取质押数量，默认为0
+        if delegator['address'] in stake_summary:
+            stake_summary[delegator['address']] += int(stake_amount)  # 累加质押数量
+        else:
+            stake_summary[delegator['address']] = int(stake_amount)  # 初始化质押数量
 
-    unique_delegators = set(delegators_list)
-    print(len(delegators_list))
-    print(unique_delegators)
+    # 打印每个delegator的质押数量
+    for address, total_stake in stake_summary.items():
+        print(f"Delegator: {address}, Total Stake: {total_stake}")
+        
+    delegators_list_stake_blow_5000, delegators_list_stake_above_5000 = [], []
+    for address, total_stake in stake_summary.items():
+        if int(total_stake) < 5000*10**18:
+            delegators_list_stake_blow_5000.append(address)
+        else:
+            delegators_list_stake_above_5000.append(address)
+    # print(len(delegators_list_all))
 
-    with open('delegators.csv', mode='w', newline='') as file:
+    with open('delegators_stake_blow_5000.csv', mode='w', newline='') as file:
         writer = csv.writer(file)
         writer.writerow(['address'])  # 写入表头
-        for delegator in unique_delegators:
+        for delegator in delegators_list_stake_blow_5000:
+            writer.writerow([delegator])  # 写入去重后的地址
+
+    with open('delegators_stake_above_5000.csv', mode='w', newline='') as file:
+        writer = csv.writer(file)
+        writer.writerow(['address'])  # 写入表头
+        for delegator in delegators_list_stake_above_5000:
             writer.writerow([delegator])  # 写入去重后的地址
