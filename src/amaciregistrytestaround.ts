@@ -145,11 +145,11 @@ async function createAMACIRound(
 	return contractAddress;
 }
 
-export async function batchSend(recipients: string[]) {
+export async function batchSend(signerAddress: string, recipients: string[], amount_per_voter: string) {
 	const batchSize = 1500;
 	let client = await getSignerClient();
 
-	const amount = coins('25000000000000000000', 'peaka'); // 25
+	const amount = coins(amount_per_voter, 'peaka');
 
 	const gasPrice = GasPrice.fromString('100000000000peaka');
 
@@ -207,107 +207,14 @@ export async function randomSubmitMsg(
 	maciAccount: Account,
 	coordPubKey: PublicKey
 ) {
-	/**
-	 * 随机给一个项目投若干票
-	 */
-	// const plan = [
-	// 	[Math.floor(Math.random() * 10), Math.floor(Math.random() * 10)] as [
-	// 		number,
-	// 		number
-	// 	],
-	// ];
+
+	// 给每个项目投5票，一个voter投5个项目，所以是20票
 	const plan = [
-		[1, 1] as [number, number],
-		[2, 2] as [number, number],
-		[3, 3] as [number, number],
-		[4, 1] as [number, number],
-	];
-
-	const payload = batchGenMessage(stateIdx, maciAccount, coordPubKey, plan);
-
-	const msgs: MsgExecuteContractEncodeObject[] = payload.map(
-		({ msg, encPubkeys }) => ({
-			typeUrl: '/cosmwasm.wasm.v1.MsgExecuteContract',
-			value: MsgExecuteContract.fromPartial({
-				sender: address,
-				contract: contractAddress,
-				msg: new TextEncoder().encode(
-					JSON.stringify(
-						stringizing({
-							publish_message: {
-								enc_pub_key: {
-									x: encPubkeys[0],
-									y: encPubkeys[1],
-								},
-								message: {
-									data: msg,
-								},
-							},
-						})
-					)
-				),
-			}),
-		})
-	);
-
-	const gasPrice = GasPrice.fromString('100000000000peaka');
-	const fee = calculateFee(20000000 * msgs.length, gasPrice);
-	try {
-		const currentHeight = await client.getHeight();
-		const timeoutHeight = BigInt(currentHeight) + BigInt(4); // 假设每个区块5秒,4个区块大约20秒
-
-		const result = await client.signAndBroadcast(
-			address,
-			msgs,
-			fee,
-			undefined,
-			timeoutHeight
-		);
-
-		console.log(stateIdx, `pub_msg hash ${result.transactionHash}`);
-		return result;
-	} catch (err) {
-		// 将 err 类型显式地转换为 Error
-		if (err instanceof Error) {
-			if (
-				err.message.includes(
-					'You might want to check later. There was a wait of 16 seconds.'
-				)
-			) {
-				console.log(err.message);
-				console.log('skip this error and waiting 16s.');
-				await delay(17000);
-			} else {
-				console.error('Unexpected error', err);
-
-				throw err;
-			}
-		}
-	}
-}
-
-export async function randomSubmitMsg2(
-	client: SigningCosmWasmClient,
-	contractAddress: string,
-	address: string,
-	stateIdx: number,
-	maciAccount: Account,
-	coordPubKey: PublicKey
-) {
-	/**
-	 * 随机给一个项目投若干票
-	 */
-	// const plan = [
-	// 	[Math.floor(Math.random() * 10), Math.floor(Math.random() * 10)] as [
-	// 		number,
-	// 		number
-	// 	],
-	// ];
-	const plan = [
-		[0, 1] as [number, number],
-		[2, 2] as [number, number],
-		[3, 3] as [number, number],
-		[4, 1] as [number, number],
+		[0, 5] as [number, number],
+		[1, 5] as [number, number],
+		[2, 5] as [number, number],
+		[3, 5] as [number, number],
+		[4, 5] as [number, number],
 	];
 
 	const payload = batchGenMessage(stateIdx, maciAccount, coordPubKey, plan);
@@ -493,7 +400,7 @@ export async function randomSubmitDeactivateMsg(
 	}
 }
 
-async function batch_2_amaci_test(
+async function batch_2115_voter(
 	creator: DirectSecp256k1HdWallet,
 	operator: string,
 	user1: DirectSecp256k1HdWallet,
@@ -507,9 +414,6 @@ async function batch_2_amaci_test(
 	user2StateIdx: number,
 	circuitType: string
 ) {
-	const pubkeyFilePath = './src/test/user_pubkey.json';
-	const logsFilePath = './src/test/user_logs.json';
-
 	let registryClient = await getRegistryClientBy(
 		creator,
 		registryContractAddress
@@ -598,19 +502,6 @@ async function batch_2_amaci_test(
 			);
 
 			try {
-				// let grant_res = await creatorMaciClient.grant({
-				// 	maxAmount: '100000000000000000000000',
-				// });
-				// console.log(`grant hash: ${grant_res.transactionHash}`);
-
-				// let bond_res = await creatorMaciClient.bond('auto', undefined, [
-				// 	{
-				// 		denom: 'peaka',
-				// 		amount: '7000000000000000000',
-				// 	},
-				// ]);
-				// console.log(`bond hash: ${bond_res.transactionHash}`);
-
 				let numSignUp = await user1MaciClient.getNumSignUp();
 				console.log(`start num_sign_ups: ${numSignUp}`); // Expect 0
 				await delay(500);
@@ -635,12 +526,6 @@ async function batch_2_amaci_test(
 				try {
 					const gasPrice = GasPrice.fromString('100000000000peaka');
 					const signUpFee = calculateFee(60000000, gasPrice);
-
-					// const grantFee: StdFee = {
-					// 	amount: signUpFee.amount,
-					// 	gas: signUpFee.gas,
-					// 	granter: contractAddress,
-					// };
 
 					let user1_res = await user1MaciClient.signUp(
 						{
@@ -727,7 +612,7 @@ async function batch_2_amaci_test(
 					`user2 pubkey state idx: ${user2_pubkey_state_idx}`
 				);
 
-				await randomSubmitMsg2(
+				await randomSubmitMsg(
 					user2Client,
 					contractAddress,
 					user2Address,
@@ -747,7 +632,7 @@ async function batch_2_amaci_test(
 	await delay(16000);
 }
 
-async function batch_4_amaci_test(
+async function batch_42225_voter(
 	creator: DirectSecp256k1HdWallet,
 	operator: string,
 	user1: DirectSecp256k1HdWallet,
@@ -768,9 +653,6 @@ async function batch_4_amaci_test(
 	title: string,
 	circuitType: string
 ) {
-	const pubkeyFilePath = './src/test/user_pubkey.json';
-	const logsFilePath = './src/test/user_logs.json';
-
 	let registryClient = await getRegistryClientBy(
 		creator,
 		registryContractAddress
@@ -951,8 +833,6 @@ async function batch_4_amaci_test(
 			);
 
 			try {
-				const pubkeyContent = await readFile(pubkeyFilePath);
-				const logsContent = await readFile(logsFilePath);
 
 				let numSignUp = await user1MaciClient.getNumSignUp();
 				console.log(`start num_sign_ups: ${numSignUp}`); // Expect 0
@@ -1474,7 +1354,7 @@ async function batch_4_amaci_test(
 					coordPubKey
 				);
 
-				await randomSubmitMsg2(
+				await randomSubmitMsg(
 					user8Client,
 					contractAddress,
 					user8Address,
@@ -1483,7 +1363,7 @@ async function batch_4_amaci_test(
 					coordPubKey
 				);
 
-				await randomSubmitMsg2(
+				await randomSubmitMsg(
 					user9Client,
 					contractAddress,
 					user9Address,
@@ -1535,34 +1415,30 @@ export async function amaciregistrytestround(roundNum: number) {
 	let start = 0;
 	// let roundNum = 1;
 	let thread = 3 * roundNum - 1; // 3 multi - 1
-	for (let i = 1; i <= 13; i++) {
+	// 25个voter
+	for (let i = 1; i <= 25; i++) {
 		let signer = await generateAccount(i);
 		let accountDetail = await signer.getAccounts();
 		accountAddresslist.push(accountDetail[0].address);
 		signerList.push(signer);
 	}
 
-	// // await batchSend(accountAddresslist);
-	// // await delay(10000);
+	// 一开始的时候分发钱
+	// await batchSend(accountAddresslist);
+	// await delay(10000);
 	// await batchSendBig(accountAddresslist.slice(0, 2));
 	// await delay(10000);
 
 	let operatorList = [
 		// {
-		//      operator: 'dora15yfyalf872yut8cecy8p2j7rer9dd98rlg3xtq',
-		//      pubkey: [
-		//              '7421895562686352826563669933550830041677218724210020561066263498415701325176',
-		//              '15885728170420100812951141355295788125825926252169931895803773048587171524289',
-		//      ],
+		// 	operator: 'dora149n5yhzgk5gex0eqmnnpnsxh6ys4exg5xyqjzm',
+		// 	pubkey: [
+		// 		'3457695696360848193502608246254422070002779638488733236214423797131720399296',
+		// 		'10721319678265866063861912417916780787229942812531198850410477756757845824096',
+		// 	],
 		// },
 
-		{
-			operator: 'dora149n5yhzgk5gex0eqmnnpnsxh6ys4exg5xyqjzm',
-			pubkey: [
-				'3457695696360848193502608246254422070002779638488733236214423797131720399296',
-				'10721319678265866063861912417916780787229942812531198850410477756757845824096',
-			],
-		},
+		// 只用第二个operator执行就ok, amaci-test2机器
 		{
 			operator: 'dora1zrd68hgj5uzqpm5x8v6pylwqjsnltp6nyr8s0k',
 			pubkey: [
@@ -1570,121 +1446,24 @@ export async function amaciregistrytestround(roundNum: number) {
 				'6821363586466624930174394695023126212730779300840339744873622125361194404156',
 			],
 		},
-		{
-			operator: 'dora1k383vky62t85496xwp6qnalw5u2qj4tvsneluc',
-			pubkey: [
-				'339457423059495574326820494023899998621467676828017937021309840270576858799',
-				'4138216818137880315912826301418122715579481744260360896824552739285524788661',
-			],
-		},
+		// {
+		// 	operator: 'dora1k383vky62t85496xwp6qnalw5u2qj4tvsneluc',
+		// 	pubkey: [
+		// 		'339457423059495574326820494023899998621467676828017937021309840270576858799',
+		// 		'4138216818137880315912826301418122715579481744260360896824552739285524788661',
+		// 	],
+		// },
 	];
 
-	// let operatorList = [
-	// 	// {
-	// 	// 	operator: 'dora1cw3wf6lxddx498ga9v4jdrragf2zhjx455cku3',
-	// 	// 	pubkey: [
-	// 	// 		'4417857533698907802458937167572830658299030035842689506659910759118885164852',
-	// 	// 		'18398139698235724775231612555438742459611017534174266711720047667402937434969',
-	// 	// 	],
-	// 	// },
-	// 	// {
-	// 	// 	operator: 'dora1j7yxvcynp95c9dwzzz78f5xlkj94xpt3mql2hq',
-	// 	// 	pubkey: [
-	// 	// 		'17369417334654652281073855690665607587368618936444350938621925111810050191392',
-	// 	// 		'11116634654164812410195077865352436834368955827446872641119763763006362822345',
-	// 	// 	],
-	// 	// },
-	// 	// {
-	// 	// 	operator: 'dora14lst9pkx3mwlr3m0gxsrundflnsqkd27x27kmc',
-	// 	// 	pubkey: [
-	// 	// 		'19433940172816315444685116295647994756296924976491102058257283846008830173474',
-	// 	// 		'15959567042037372324855002189850335378643391886048730588847287049569054991662',
-	// 	// 	],
-	// 	// },
-	// 	// {
-	// 	// 	operator: 'dora12ch7slkdtlk9fmm348qmfdclzeqw8ntrj3wq7c', // Citadel.one
-	// 	// 	pubkey: [
-	// 	// 		'6287930297913945282978887922669223325878689345894298410069300652806691204142',
-	// 	// 		'1097175243062458227150725018049984303100392784363262430579271971998185183929',
-	// 	// 	],
-	// 	// },
-	// 	// {
-	// 	// 	operator: 'dora16nkezrnvw9fzqqqmmqtrdkw3pqes6qthhse2k4', // Dora Factory
-	// 	// 	pubkey: [
-	// 	// 		'1815360346961449660304628500630863783773328239515529681920310230078929610635',
-	// 	// 		'1543204810362218394850028913632376147290317641442164443830849121941234286792',
-	// 	// 	],
-	// 	// },
-	// 	// {
-	// 	// 	operator: 'dora1zgkjgh2ylxnq7x3v5cws4e2tzszn34yy7tee6w', // Dora Ventures
-	// 	// 	pubkey: [
-	// 	// 		'10969241262411761017104078252396795671990154867469832050719006547208752421806',
-	// 	// 		'18442691397917891858727958831345150138795621884110620041478625337723969259353',
-	// 	// 	],
-	// 	// },
-	// 	// {
-	// 	// 	operator: 'dora1nddnr2fjcupt3eher59mrp0cmwn52e4c98y4k5',
-	// 	// 	pubkey: [
-	// 	// 		'11043362857411207101295473092701542792077153813505230615881421921648274746246',
-	// 	// 		'3431336307758495332528815819065155244352578928861293932308944643929528727389',
-	// 	// 	],
-	// 	// },
-	// 	// {
-	// 	// 	operator: 'dora1wwxceywj7ja3n035w0x94nsr4udyf4mw2jgyrr',
-	// 	// 	pubkey: [
-	// 	// 		'11978457659628044082619754133110456565484171271573638805501556808649565797391',
-	// 	// 		'17617391654650568936014542367907682392252640817518365969346802072098886141441',
-	// 	// 	],
-	// 	// },
-	// 	// {
-	// 	// 	operator: 'dora1hghmu7zapyzzgnqxhqckzd0y00envqe9g2w2du',
-	// 	// 	pubkey: [
-	// 	// 		'17435182746053293007942830428304767502578289201180417325365913156635374538387',
-	// 	// 		'11099816916496136858818144201886975724812612212734072177889711695320139386392',
-	// 	// 	],
-	// 	// },
-	// 	// {
-	// 	// 	operator: 'dora1zjzm7rwmum7p0vdvhyql8hstk3d8p8wxtd7rep',
-	// 	// 	pubkey: [
-	// 	// 		'20211487500471801899049648863556940225753211748448072695910082357606933345218',
-	// 	// 		'754988664436737478127212310497220463618756945220078784776032979093485613910',
-	// 	// 	],
-	// 	// },
-	// 	// {
-	// 	// 	operator: 'dora1cq99fd447q8xdp8u99sdjuw7udzyhzpw5eg2d3',
-	// 	// 	pubkey: [
-	// 	// 		'1698921379599390399065843848651873934863165648052076964844264692772428470751',
-	// 	// 		'15172997820160411826967959117929439905605183535674057390659351412068202152356',
-	// 	// 	],
-	// 	// },
-	// 	{
-	// 		operator: 'dora1ahu6cpk29rd2yqw3c53l0tjsc9w0q7xf5p9e8u',
-	// 		pubkey: [
-	// 			'4924348282548225552684197393994499100391152173243253655016296875428630196340',
-	// 			'18465950528022514058363885629656919648755871361551640959680463154520937761720',
-	// 		],
-	// 	},
-	// 	{
-	// 		operator: 'dora1mmz80knqzxal8pke747ty46nlaysvls7rw2yje',
-	// 		pubkey: [
-	// 			'11432490644815648309193414735260744748222413562660360907232756557595891488306',
-	// 			'17837933442863038387726990400128196241219401479812161784932583056242445933808',
-	// 		],
-	// 	},
-	// 	{
-	// 		operator: 'dora1w8skpx06l5zmrp5pvj0fa49zcsnwhvtxyhfr8v', // ZKV
-	// 		pubkey: [
-	// 			'1447136561555038286186759509586332431076499146392616437011550399381420797094',
-	// 			'4489922528030912429989527073875552800014544988121241929299373324515078932919',
-	// 		],
-	// 	},
-	// ];
-
 	const start_voting = new Date();
-	const end_voting = new Date(start_voting.getTime() + 12 * 60 * 1000); // 10s
+	// voting period is 6min
+	const end_voting = new Date(start_voting.getTime() + 6 * 60 * 1000); 
 
 	for (let i = start; i <= thread; i += 3) {
+		// round创建者
 		let creator = await generateAccount(0);
+
+		// voter
 		let user1 = await generateAccount(1);
 		let user2 = await generateAccount(2);
 		let user3 = await generateAccount(3);
@@ -1698,108 +1477,17 @@ export async function amaciregistrytestround(roundNum: number) {
 		let user11 = await generateAccount(11);
 		let user12 = await generateAccount(12);
 
-		// await delay(12000);
-		console.log(`---- Start Round: ${i / 3} ----`);
-		console.log(
-			`${(i % (operatorList.length * 3)) / 3} operator: ${
-				operatorList[(i % (operatorList.length * 3)) / 3].operator
-			}`
-		);
-
-		// // console.log('test: amaci 2');
-		let title = '2-1-1-5 1p1v with deactivate msg: new version';
+		let title = '2-1-1-5 1p1v benchmark 25votes';
 		let skipDeactivate = false;
 		let user1StateIdx = 0;
 		let user2StateIdx = 1;
 		let circuitType = '0';
-		// await batch_2_amaci_test(
-		// 	creator,
-		// 	operatorList[(i % (operatorList.length * 3)) / 3].operator,
-		// 	user1,
-		// 	user2,
-		// 	operatorList[(i % (operatorList.length * 3)) / 3].pubkey,
-		// 	end_voting,
-		// 	false,
-		// 	title,
-		// 	skipDeactivate,
-		// 	user1StateIdx,
-		// 	user2StateIdx,
-		// 	circuitType
-		// );
-
-		// title = '2-1-1-5 1p1v';
-		// skipDeactivate = true;
-		// user1StateIdx = 0;
-		// user2StateIdx = 1;
-		// circuitType = '0';
-		// await batch_2_amaci_test(
-		// 	creator,
-		// 	operatorList[(i % (operatorList.length * 3)) / 3].operator,
-		// 	user1,
-		// 	user2,
-		// 	operatorList[(i % (operatorList.length * 3)) / 3].pubkey,
-		// 	end_voting,
-		// 	false,
-		// 	title,
-		// 	skipDeactivate,
-		// 	user1StateIdx,
-		// 	user2StateIdx,
-		// 	circuitType
-		// );
-
-		// // // title: 'new contract 2-1-1-5 qv with wrong stateIdx: user1: 10, user2: 15',
-		// // // title: 'new contract 4-2-2-25 1p1v with deactivate msg',
-		// // title = '2-1-1-5 1p1v with wrong stateIdx: user1: 1, user2: 2';
-		// // skipDeactivate = true;
-		// // user1StateIdx = 1;
-		// // user2StateIdx = 2;
-		// // circuitType = '0';
-		// // await batch_2_amaci_test(
-		// // 	creator,
-		// // 	operatorList[(i % (operatorList.length * 3)) / 3].operator,
-		// // 	user1,
-		// // 	user2,
-		// // 	operatorList[(i % (operatorList.length * 3)) / 3].pubkey,
-		// // 	end_voting,
-		// // 	false,
-		// // 	title,
-		// // 	skipDeactivate,
-		// // 	user1StateIdx,
-		// // 	user2StateIdx,
-		// // 	circuitType
-		// // );
-
-		// // title = '2-1-1-5 1p1v with wrong stateIdx: user1: 10, user2: 15';
-		// // skipDeactivate = true;
-		// // user1StateIdx = 10;
-		// // user2StateIdx = 15;
-		// // circuitType = '0';
-		// // await batch_2_amaci_test(
-		// // 	creator,
-		// // 	operatorList[(i % (operatorList.length * 3)) / 3].operator,
-		// // 	user1,
-		// // 	user2,
-		// // 	operatorList[(i % (operatorList.length * 3)) / 3].pubkey,
-		// // 	end_voting,
-		// // 	false,
-		// // 	title,
-		// // 	skipDeactivate,
-		// // 	user1StateIdx,
-		// // 	user2StateIdx,
-		// // 	circuitType
-		// // );
-
-		title = '2-1-1-5 qv with deactivate msg: new version';
-		skipDeactivate = false;
-		user1StateIdx = 0;
-		user2StateIdx = 1;
-		circuitType = '1';
-		await batch_2_amaci_test(
+		await batch_2115_voter(
 			creator,
-			operatorList[(i % (operatorList.length * 3)) / 3].operator,
+			operatorList[0].operator,
 			user1,
 			user2,
-			operatorList[(i % (operatorList.length * 3)) / 3].pubkey,
+			operatorList[0].pubkey,
 			end_voting,
 			false,
 			title,
@@ -1809,17 +1497,17 @@ export async function amaciregistrytestround(roundNum: number) {
 			circuitType
 		);
 
-		// title = '2-1-1-5 qv';
-		// skipDeactivate = true;
+		// title = '2-1-1-5 qv with deactivate msg: new version';
+		// skipDeactivate = false;
 		// user1StateIdx = 0;
 		// user2StateIdx = 1;
 		// circuitType = '1';
-		// await batch_2_amaci_test(
+		// await batch_2115_voter(
 		// 	creator,
-		// 	operatorList[(i % (operatorList.length * 3)) / 3].operator,
+		// 	operatorList[0].operator,
 		// 	user1,
 		// 	user2,
-		// 	operatorList[(i % (operatorList.length * 3)) / 3].pubkey,
+		// 	operatorList[0].pubkey,
 		// 	end_voting,
 		// 	false,
 		// 	title,
@@ -1829,51 +1517,12 @@ export async function amaciregistrytestround(roundNum: number) {
 		// 	circuitType
 		// );
 
-		// // title = '2-1-1-5 qv with wrong stateIdx: user1: 1, user2: 2';
-		// // skipDeactivate = true;
-		// // user1StateIdx = 1;
-		// // user2StateIdx = 2;
-		// // circuitType = '1';
-		// // await batch_2_amaci_test(
-		// // 	creator,
-		// // 	operatorList[(i % (operatorList.length * 3)) / 3].operator,
-		// // 	user1,
-		// // 	user2,
-		// // 	operatorList[(i % (operatorList.length * 3)) / 3].pubkey,
-		// // 	end_voting,
-		// // 	false,
-		// // 	title,
-		// // 	skipDeactivate,
-		// // 	user1StateIdx,
-		// // 	user2StateIdx,
-		// // 	circuitType
-		// // );
-
-		// // title = '2-1-1-5 qv with wrong stateIdx: user1: 10, user2: 15';
-		// // skipDeactivate = true;
-		// // user1StateIdx = 10;
-		// // user2StateIdx = 15;
-		// // circuitType = '1';
-		// // await batch_2_amaci_test(
-		// // 	creator,
-		// // 	operatorList[(i % (operatorList.length * 3)) / 3].operator,
-		// // 	user1,
-		// // 	user2,
-		// // 	operatorList[(i % (operatorList.length * 3)) / 3].pubkey,
-		// // 	end_voting,
-		// // 	false,
-		// // 	title,
-		// // 	skipDeactivate,
-		// // 	user1StateIdx,
-		// // 	user2StateIdx,
-		// // 	circuitType
-		// // );
 
 		// title = '4-2-2-25 qv with deactivate msg';
 		// circuitType = '1';
-		// await batch_4_amaci_test(
+		// await batch_42225_voter(
 		// 	creator,
-		// 	operatorList[(i % (operatorList.length * 3)) / 3].operator,
+		// 	operatorList[0].operator,
 		// 	user1,
 		// 	user2,
 		// 	user3,
@@ -1886,7 +1535,7 @@ export async function amaciregistrytestround(roundNum: number) {
 		// 	user10,
 		// 	user11,
 		// 	user12,
-		// 	operatorList[(i % (operatorList.length * 3)) / 3].pubkey,
+		// 	operatorList[0].pubkey,
 		// 	end_voting,
 		// 	false,
 		// 	title,
@@ -1895,9 +1544,9 @@ export async function amaciregistrytestround(roundNum: number) {
 
 		// title = '4-2-2-25 1p1v with deactivate msg';
 		// circuitType = '0';
-		// await batch_4_amaci_test(
+		// await batch_42225_voter(
 		// 	creator,
-		// 	operatorList[(i % (operatorList.length * 3)) / 3].operator,
+		// 	operatorList[0].operator,
 		// 	user1,
 		// 	user2,
 		// 	user3,
@@ -1910,68 +1559,11 @@ export async function amaciregistrytestround(roundNum: number) {
 		// 	user10,
 		// 	user11,
 		// 	user12,
-		// 	operatorList[(i % (operatorList.length * 3)) / 3].pubkey,
+		// 	operatorList[0].pubkey,
 		// 	end_voting,
 		// 	false,
 		// 	title,
 		// 	circuitType
 		// );
-
-		// console.log('test: amaci 4');
-		// await batch_4_amaci_test(
-		// 	creator,
-		// 	operatorList[(i % (operatorList.length * 3)) / 3].operator,
-		// 	user1,
-		// 	user2,
-		// 	user3,
-		// 	user4,
-		// 	user5,
-		// 	user6,
-		// 	user7,
-		// 	user8,
-		// 	user9,
-		// 	user10,
-		// 	user11,
-		// 	user12,
-		// 	operatorList[(i % (operatorList.length * 3)) / 3].pubkey,
-		// 	end_voting,
-		// 	false
-		// );
-
-		// // 根据当前批次选择不同的处理函数
-		// if ((i / 3) % 2 === 0) {
-		// 	console.log('test: amaci 2');
-		// 	await batch_2_amaci_test(
-		// 		creator,
-		// 		operatorList[(i % (operatorList.length * 3)) / 3].operator,
-		// 		user1,
-		// 		user2,
-		// 		operatorList[(i % (operatorList.length * 3)) / 3].pubkey,
-		// 		end_voting,
-		// 		false
-		// 	);
-		// } else {
-		// 	console.log('test: amaci 4');
-		// 	console.log('skip amaci 4');
-		// 	await batch_4_amaci_test(
-		// 		creator,
-		// 		operatorList[(i % (operatorList.length * 3)) / 3].operator,
-		// 		user1,
-		// 		user2,
-		// 		user3,
-		// 		user4,
-		// 		user5,
-		// 		user6,
-		// 		user7,
-		// 		user8,
-		// 		user9,
-		// 		user10,
-		// 		user11,
-		// 		user12,
-		// 		operatorList[(i % (operatorList.length * 3)) / 3].pubkey,
-		// 		end_voting,
-		// 		false
-		// 	);
-		// }
 	}
 }

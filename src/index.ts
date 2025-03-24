@@ -33,6 +33,7 @@ import { amaciregistrytest } from './amaciregistrytest';
 import { queryVoters } from './query-dora-account';
 import { queryQfVoters } from './query-qf-account';
 import { amaciregistrytestround } from './amaciregistrytestaround';
+import { distributeToken } from './distributeToken';
 
 type DelegatorData = {
 	id: number;
@@ -129,9 +130,12 @@ async function main() {
 	// await queryFunc();
 	// await amacitest();
 	// await maciindexertest(100);
-	await amaciregistrytestround(9);
+	// 数字代表一共跑几个round
+	await amaciregistrytestround(3);
 	// await queryVoters();
 	// await queryQfVoters();
+
+	// await distributeToken();
 }
 
 main();
