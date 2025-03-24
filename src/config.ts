@@ -16,16 +16,17 @@ import * as dotenv from 'dotenv';
 import { RegistryClient } from './ts/Registry.client';
 dotenv.config();
 
-export const rpcEndpoint = 'https://vota-rpc.dorafactory.org';
-export const restEndpoint = 'https://vota-rest.dorafactory.org';
-export const apiEndpoint = 'https://vota-api.dorafactory.org';
-export const chainId = 'vota-ash';
+// export const rpcEndpoint = 'https://vota-rpc.dorafactory.org';
+// export const restEndpoint = 'https://vota-rest.dorafactory.org';
+// export const apiEndpoint = 'https://vota-api.dorafactory.org';
+// export const qfApiEndpoint = 'https://aez-api.dorafactory.org';
+// export const chainId = 'vota-ash';
 
-// export const rpcEndpoint = 'https://vota-testnet-rpc.dorafactory.org';
-// export const restEndpoint = 'https://vota-testnet-rest.dorafactory.org';
-// export const apiEndpoint = 'https://vota-testnet-api.dorafactory.org';
+export const rpcEndpoint = 'https://vota-testnet-rpc.dorafactory.org';
+export const restEndpoint = 'https://vota-testnet-rest.dorafactory.org';
+export const apiEndpoint = 'https://vota-testnet-api.dorafactory.org';
 export const qfApiEndpoint = 'https://aez-api.dorafactory.org';
-// export const chainId = 'vota-testnet';
+export const chainId = 'vota-testnet';
 
 // export const rpcEndpoint = 'http://127.0.0.1:26657';
 // export const restEndpoint = 'http://127.0.0.1:1317';
@@ -39,12 +40,11 @@ export const qfApiEndpoint = 'https://aez-api.dorafactory.org';
 
 export const prefix = 'dora';
 
-// export const mnemonic = // dora1t58t7azqzq26406uwehgnfekal5kzym3m9lz4k
-
-export const signerAddress = 'dora12c8lpjqrpjzlawx8g4xe873umy4e6vr5atqzhn';
+// export const signerAddress = 'dora12c8lpjqrpjzlawx8g4xe873umy4e6vr5atqzhn';
+export const signerAddress = 'dora149n5yhzgk5gex0eqmnnpnsxh6ys4exg5xyqjzm';
 export const contractAddress =
-	'dora1suhgf5svhu4usrurvxzlgn54ksxmn8gljarjtxqnapv8kjnp4nrscxqr5v';
-// 'dora1wdnc37yzmjvxksq89wdxwug0knuxau73ume3h6afngsmzsztsvwqggaxl2';
+	// 'dora1suhgf5svhu4usrurvxzlgn54ksxmn8gljarjtxqnapv8kjnp4nrscxqr5v';
+	'dora1wdnc37yzmjvxksq89wdxwug0knuxau73ume3h6afngsmzsztsvwqggaxl2';
 
 // export const defaultCoordPubKey = [
 // 	7421895562686352826563669933550830041677218724210020561066263498415701325176n,

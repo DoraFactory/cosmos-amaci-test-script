@@ -34,7 +34,6 @@ import {
 	SigningCosmWasmClient,
 } from '@cosmjs/cosmwasm-stargate';
 import { MsgExecuteContract } from 'cosmjs-types/cosmwasm/wasm/v1/tx';
-import { bech32 } from 'bech32';
 import { AMaciClient } from './ts/AMaci.client';
 import { Groth16ProofType, MessageData, PubKey } from './ts/AMaci.types';
 import { RegistryClient } from './ts/Registry.client';
@@ -95,30 +94,40 @@ async function createAMACIRound(
 	// const start_time = '1726070400000000000';
 	// const end_time = '1757606400000000000';
 
-	const res = await client.createRound({
-		operator,
-		preDeactivateRoot: '0',
-		voiceCreditAmount: '40',
-		whitelist,
-		roundInfo: {
-			// title: 'Embracing the Uncertainty: A Journey Through Life’s Unexpected Twists and Hidden Opportunities',
-			// title: 'new contract 2-1-1-5 qv with wrong stateIdx: user1: 10, user2: 15',
-			// title: 'new contract 4-2-2-25 1p1v with deactivate msg',
-			title,
-			description:
-				'Life is often compared to a winding road, filled with unexpected turns and hidden challenges. Along this journey, we encounter moments that test our resolve and shape our character. Every step forward, no matter how small, brings us closer to our true purpose. In these quiet, often unnoticed moments, growth happens, and the strength we never knew we had emerges. As we continue down this path, the beauty lies not in the destination, but in the journey itself—the people we meet, the lessons we learn, and the stories we create along the way.',
-			link: 'https://www.google.com',
+	const res = await client.createRound(
+		{
+			operator,
+			preDeactivateRoot: '0',
+			voiceCreditAmount: '40',
+			whitelist,
+			roundInfo: {
+				// title: 'Embracing the Uncertainty: A Journey Through Life’s Unexpected Twists and Hidden Opportunities',
+				// title: 'new contract 2-1-1-5 qv with wrong stateIdx: user1: 10, user2: 15',
+				// title: 'new contract 4-2-2-25 1p1v with deactivate msg',
+				title,
+				description:
+					'Life is often compared to a winding road, filled with unexpected turns and hidden challenges. Along this journey, we encounter moments that test our resolve and shape our character. Every step forward, no matter how small, brings us closer to our true purpose. In these quiet, often unnoticed moments, growth happens, and the strength we never knew we had emerges. As we continue down this path, the beauty lies not in the destination, but in the journey itself—the people we meet, the lessons we learn, and the stories we create along the way.',
+				link: 'https://www.google.com',
+			},
+			votingTime: {
+				start_time,
+				end_time,
+			},
+			maxVoter,
+			maxOption,
+			certificationSystem: '0',
+			// circuitType: '0',
+			circuitType,
 		},
-		votingTime: {
-			start_time,
-			end_time,
-		},
-		maxVoter,
-		maxOption,
-		certificationSystem: '0',
-		// circuitType: '0',
-		circuitType,
-	});
+		'auto',
+		undefined,
+		[
+			{
+				denom: 'peaka',
+				amount: '50000000000000000000',
+			},
+		]
+	);
 	let contractAddress = '';
 	res.events.map(event => {
 		if (event.type === 'wasm') {
@@ -167,7 +176,7 @@ export async function batchSendBig(recipients: string[]) {
 	const batchSize = 1500;
 	let client = await getSignerClient();
 
-	const amount = coins('300000000000000000000', 'peaka'); // 50
+	const amount = coins('100000000000000000000', 'peaka'); // 50
 
 	const gasPrice = GasPrice.fromString('100000000000peaka');
 
@@ -589,18 +598,18 @@ async function batch_2_amaci_test(
 			);
 
 			try {
-				let grant_res = await creatorMaciClient.grant({
-					maxAmount: '100000000000000000000000',
-				});
-				console.log(`grant hash: ${grant_res.transactionHash}`);
+				// let grant_res = await creatorMaciClient.grant({
+				// 	maxAmount: '100000000000000000000000',
+				// });
+				// console.log(`grant hash: ${grant_res.transactionHash}`);
 
-				let bond_res = await creatorMaciClient.bond('auto', undefined, [
-					{
-						denom: 'peaka',
-						amount: '7000000000000000000',
-					},
-				]);
-				console.log(`bond hash: ${bond_res.transactionHash}`);
+				// let bond_res = await creatorMaciClient.bond('auto', undefined, [
+				// 	{
+				// 		denom: 'peaka',
+				// 		amount: '7000000000000000000',
+				// 	},
+				// ]);
+				// console.log(`bond hash: ${bond_res.transactionHash}`);
 
 				let numSignUp = await user1MaciClient.getNumSignUp();
 				console.log(`start num_sign_ups: ${numSignUp}`); // Expect 0
@@ -627,17 +636,17 @@ async function batch_2_amaci_test(
 					const gasPrice = GasPrice.fromString('100000000000peaka');
 					const signUpFee = calculateFee(60000000, gasPrice);
 
-					const grantFee: StdFee = {
-						amount: signUpFee.amount,
-						gas: signUpFee.gas,
-						granter: contractAddress,
-					};
+					// const grantFee: StdFee = {
+					// 	amount: signUpFee.amount,
+					// 	gas: signUpFee.gas,
+					// 	granter: contractAddress,
+					// };
 
 					let user1_res = await user1MaciClient.signUp(
 						{
 							pubkey: pubkey0,
 						},
-						grantFee
+						signUpFee
 					);
 					console.log(
 						`user1 signup hash: ${user1_res.transactionHash}`
@@ -1533,8 +1542,8 @@ export async function amaciregistrytestround(roundNum: number) {
 		signerList.push(signer);
 	}
 
-	// await batchSend(accountAddresslist);
-	// await delay(10000);
+	// // await batchSend(accountAddresslist);
+	// // await delay(10000);
 	// await batchSendBig(accountAddresslist.slice(0, 2));
 	// await delay(10000);
 
@@ -1599,55 +1608,55 @@ export async function amaciregistrytestround(roundNum: number) {
 	// 	// 		'1097175243062458227150725018049984303100392784363262430579271971998185183929',
 	// 	// 	],
 	// 	// },
-	// 	{
-	// 		operator: 'dora16nkezrnvw9fzqqqmmqtrdkw3pqes6qthhse2k4', // Dora Factory
-	// 		pubkey: [
-	// 			'1815360346961449660304628500630863783773328239515529681920310230078929610635',
-	// 			'1543204810362218394850028913632376147290317641442164443830849121941234286792',
-	// 		],
-	// 	},
-	// 	{
-	// 		operator: 'dora1zgkjgh2ylxnq7x3v5cws4e2tzszn34yy7tee6w', // Dora Ventures
-	// 		pubkey: [
-	// 			'10969241262411761017104078252396795671990154867469832050719006547208752421806',
-	// 			'18442691397917891858727958831345150138795621884110620041478625337723969259353',
-	// 		],
-	// 	},
-	// 	{
-	// 		operator: 'dora1nddnr2fjcupt3eher59mrp0cmwn52e4c98y4k5',
-	// 		pubkey: [
-	// 			'11043362857411207101295473092701542792077153813505230615881421921648274746246',
-	// 			'3431336307758495332528815819065155244352578928861293932308944643929528727389',
-	// 		],
-	// 	},
-	// 	{
-	// 		operator: 'dora1wwxceywj7ja3n035w0x94nsr4udyf4mw2jgyrr',
-	// 		pubkey: [
-	// 			'11978457659628044082619754133110456565484171271573638805501556808649565797391',
-	// 			'17617391654650568936014542367907682392252640817518365969346802072098886141441',
-	// 		],
-	// 	},
-	// 	{
-	// 		operator: 'dora1hghmu7zapyzzgnqxhqckzd0y00envqe9g2w2du',
-	// 		pubkey: [
-	// 			'17435182746053293007942830428304767502578289201180417325365913156635374538387',
-	// 			'11099816916496136858818144201886975724812612212734072177889711695320139386392',
-	// 		],
-	// 	},
-	// 	{
-	// 		operator: 'dora1zjzm7rwmum7p0vdvhyql8hstk3d8p8wxtd7rep',
-	// 		pubkey: [
-	// 			'20211487500471801899049648863556940225753211748448072695910082357606933345218',
-	// 			'754988664436737478127212310497220463618756945220078784776032979093485613910',
-	// 		],
-	// 	},
-	// 	{
-	// 		operator: 'dora1cq99fd447q8xdp8u99sdjuw7udzyhzpw5eg2d3',
-	// 		pubkey: [
-	// 			'1698921379599390399065843848651873934863165648052076964844264692772428470751',
-	// 			'15172997820160411826967959117929439905605183535674057390659351412068202152356',
-	// 		],
-	// 	},
+	// 	// {
+	// 	// 	operator: 'dora16nkezrnvw9fzqqqmmqtrdkw3pqes6qthhse2k4', // Dora Factory
+	// 	// 	pubkey: [
+	// 	// 		'1815360346961449660304628500630863783773328239515529681920310230078929610635',
+	// 	// 		'1543204810362218394850028913632376147290317641442164443830849121941234286792',
+	// 	// 	],
+	// 	// },
+	// 	// {
+	// 	// 	operator: 'dora1zgkjgh2ylxnq7x3v5cws4e2tzszn34yy7tee6w', // Dora Ventures
+	// 	// 	pubkey: [
+	// 	// 		'10969241262411761017104078252396795671990154867469832050719006547208752421806',
+	// 	// 		'18442691397917891858727958831345150138795621884110620041478625337723969259353',
+	// 	// 	],
+	// 	// },
+	// 	// {
+	// 	// 	operator: 'dora1nddnr2fjcupt3eher59mrp0cmwn52e4c98y4k5',
+	// 	// 	pubkey: [
+	// 	// 		'11043362857411207101295473092701542792077153813505230615881421921648274746246',
+	// 	// 		'3431336307758495332528815819065155244352578928861293932308944643929528727389',
+	// 	// 	],
+	// 	// },
+	// 	// {
+	// 	// 	operator: 'dora1wwxceywj7ja3n035w0x94nsr4udyf4mw2jgyrr',
+	// 	// 	pubkey: [
+	// 	// 		'11978457659628044082619754133110456565484171271573638805501556808649565797391',
+	// 	// 		'17617391654650568936014542367907682392252640817518365969346802072098886141441',
+	// 	// 	],
+	// 	// },
+	// 	// {
+	// 	// 	operator: 'dora1hghmu7zapyzzgnqxhqckzd0y00envqe9g2w2du',
+	// 	// 	pubkey: [
+	// 	// 		'17435182746053293007942830428304767502578289201180417325365913156635374538387',
+	// 	// 		'11099816916496136858818144201886975724812612212734072177889711695320139386392',
+	// 	// 	],
+	// 	// },
+	// 	// {
+	// 	// 	operator: 'dora1zjzm7rwmum7p0vdvhyql8hstk3d8p8wxtd7rep',
+	// 	// 	pubkey: [
+	// 	// 		'20211487500471801899049648863556940225753211748448072695910082357606933345218',
+	// 	// 		'754988664436737478127212310497220463618756945220078784776032979093485613910',
+	// 	// 	],
+	// 	// },
+	// 	// {
+	// 	// 	operator: 'dora1cq99fd447q8xdp8u99sdjuw7udzyhzpw5eg2d3',
+	// 	// 	pubkey: [
+	// 	// 		'1698921379599390399065843848651873934863165648052076964844264692772428470751',
+	// 	// 		'15172997820160411826967959117929439905605183535674057390659351412068202152356',
+	// 	// 	],
+	// 	// },
 	// 	{
 	// 		operator: 'dora1ahu6cpk29rd2yqw3c53l0tjsc9w0q7xf5p9e8u',
 	// 		pubkey: [
@@ -1698,25 +1707,25 @@ export async function amaciregistrytestround(roundNum: number) {
 		);
 
 		// // console.log('test: amaci 2');
-		let title = '2-1-1-5 1p1v with deactivate msg';
+		let title = '2-1-1-5 1p1v with deactivate msg: new version';
 		let skipDeactivate = false;
 		let user1StateIdx = 0;
 		let user2StateIdx = 1;
 		let circuitType = '0';
-		await batch_2_amaci_test(
-			creator,
-			operatorList[(i % (operatorList.length * 3)) / 3].operator,
-			user1,
-			user2,
-			operatorList[(i % (operatorList.length * 3)) / 3].pubkey,
-			end_voting,
-			false,
-			title,
-			skipDeactivate,
-			user1StateIdx,
-			user2StateIdx,
-			circuitType
-		);
+		// await batch_2_amaci_test(
+		// 	creator,
+		// 	operatorList[(i % (operatorList.length * 3)) / 3].operator,
+		// 	user1,
+		// 	user2,
+		// 	operatorList[(i % (operatorList.length * 3)) / 3].pubkey,
+		// 	end_voting,
+		// 	false,
+		// 	title,
+		// 	skipDeactivate,
+		// 	user1StateIdx,
+		// 	user2StateIdx,
+		// 	circuitType
+		// );
 
 		// title = '2-1-1-5 1p1v';
 		// skipDeactivate = true;
@@ -1780,7 +1789,7 @@ export async function amaciregistrytestround(roundNum: number) {
 		// // 	circuitType
 		// // );
 
-		title = '2-1-1-5 qv with deactivate msg';
+		title = '2-1-1-5 qv with deactivate msg: new version';
 		skipDeactivate = false;
 		user1StateIdx = 0;
 		user2StateIdx = 1;

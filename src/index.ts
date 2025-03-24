@@ -23,7 +23,6 @@ import {
 	ExecuteInstruction,
 } from '@cosmjs/cosmwasm-stargate';
 import { MsgExecuteContract } from 'cosmjs-types/cosmwasm/wasm/v1/tx';
-import { bech32 } from 'bech32';
 import { Account, PublicKey, batchGenMessage } from './lib/circom';
 import { benchmarkTest } from './test';
 import { amacitest } from './macitest';
@@ -130,7 +129,7 @@ async function main() {
 	// await queryFunc();
 	// await amacitest();
 	// await maciindexertest(100);
-	await amaciregistrytestround(30);
+	await amaciregistrytestround(9);
 	// await queryVoters();
 	// await queryQfVoters();
 }
