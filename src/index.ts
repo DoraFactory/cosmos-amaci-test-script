@@ -130,8 +130,8 @@ async function main() {
 	// await queryFunc();
 	// await amacitest();
 	// await maciindexertest(100);
-	// 数字代表一共跑几个round
-	await amaciregistrytestround(3);
+	// 第一个数字代表一共跑几个round，第二个数字代表一共多少个用户参与vote,第三个数字代表voting_period(mins)
+	await amaciregistrytestround(1, 25, 10);
 	// await queryVoters();
 	// await queryQfVoters();
 
