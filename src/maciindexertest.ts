@@ -31,7 +31,7 @@ import {
 	SigningCosmWasmClient,
 } from '@cosmjs/cosmwasm-stargate';
 import { MsgExecuteContract } from 'cosmjs-types/cosmwasm/wasm/v1/tx';
-import { bech32 } from 'bech32';
+// import { bech32 } from 'bech32';
 import { PublicKey, batchGenMessage } from './lib/circom';
 import { MaciClient } from './ts/Maci.client';
 import { Groth16ProofType, MessageData, PubKey } from './ts/Maci.types';

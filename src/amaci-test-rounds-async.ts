@@ -34,13 +34,13 @@ import {
 	SigningCosmWasmClient,
 } from '@cosmjs/cosmwasm-stargate';
 import { MsgExecuteContract } from 'cosmjs-types/cosmwasm/wasm/v1/tx';
-import { bech32 } from 'bech32';
 import { AMaciClient } from './ts/AMaci.client';
 import { Groth16ProofType, MessageData, PubKey } from './ts/AMaci.types';
 import { RegistryClient } from './ts/Registry.client';
 import { Whitelist } from './ts/Registry.types';
 import { PublicKey, batchGenMessage } from './lib/circom';
 import { t } from 'tar';
+import { CLIENT_RENEG_LIMIT } from 'tls';
 
 // const readFile = promisify(fs.readFile);
 
@@ -95,30 +95,40 @@ async function createAMACIRound(
 	// const start_time = '1726070400000000000';
 	// const end_time = '1757606400000000000';
 
-	const res = await client.createRound({
-		operator,
-		preDeactivateRoot: '0',
-		voiceCreditAmount: '40',
-		whitelist,
-		roundInfo: {
-			// title: 'Embracing the Uncertainty: A Journey Through Life’s Unexpected Twists and Hidden Opportunities',
-			// title: 'new contract 2-1-1-5 qv with wrong stateIdx: user1: 10, user2: 15',
-			// title: 'new contract 4-2-2-25 1p1v with deactivate msg',
-			title,
-			description:
-				'Life is often compared to a winding road, filled with unexpected turns and hidden challenges. Along this journey, we encounter moments that test our resolve and shape our character. Every step forward, no matter how small, brings us closer to our true purpose. In these quiet, often unnoticed moments, growth happens, and the strength we never knew we had emerges. As we continue down this path, the beauty lies not in the destination, but in the journey itself—the people we meet, the lessons we learn, and the stories we create along the way.',
-			link: 'https://www.google.com',
+	const res = await client.createRound(
+		{
+			operator,
+			preDeactivateRoot: '0',
+			voiceCreditAmount: '40',
+			whitelist,
+			roundInfo: {
+				// title: 'Embracing the Uncertainty: A Journey Through Life's Unexpected Twists and Hidden Opportunities',
+				// title: 'new contract 2-1-1-5 qv with wrong stateIdx: user1: 10, user2: 15',
+				// title: 'new contract 4-2-2-25 1p1v with deactivate msg',
+				title,
+				description:
+					'Life is often compared to a winding road, filled with unexpected turns and hidden challenges. Along this journey, we encounter moments that test our resolve and shape our character. Every step forward, no matter how small, brings us closer to our true purpose. In these quiet, often unnoticed moments, growth happens, and the strength we never knew we had emerges. As we continue down this path, the beauty lies not in the destination, but in the journey itself—the people we meet, the lessons we learn, and the stories we create along the way.',
+				link: 'https://www.google.com',
+			},
+			votingTime: {
+				start_time,
+				end_time,
+			},
+			maxVoter,
+			maxOption,
+			certificationSystem: '0',
+			// circuitType: '0',
+			circuitType,
 		},
-		votingTime: {
-			start_time,
-			end_time,
-		},
-		maxVoter,
-		maxOption,
-		certificationSystem: '0',
-		// circuitType: '0',
-		circuitType,
-	});
+		'auto',
+		undefined,
+		[
+			{
+				denom: 'peaka',
+				amount: '50000000000000000000',
+			},
+		]
+	);
 	let contractAddress = '';
 	res.events.map(event => {
 		if (event.type === 'wasm') {
@@ -136,11 +146,11 @@ async function createAMACIRound(
 	return contractAddress;
 }
 
-export async function batchSend(recipients: string[]) {
+export async function batchSend(signerAddress: string, recipients: string[], amount_per_voter: string) {
 	const batchSize = 1500;
 	let client = await getSignerClient();
 
-	const amount = coins('25000000000000000000', 'peaka'); // 25
+	const amount = coins(amount_per_voter, 'peaka');
 
 	const gasPrice = GasPrice.fromString('100000000000peaka');
 
@@ -167,7 +177,7 @@ export async function batchSendBig(recipients: string[]) {
 	const batchSize = 1500;
 	let client = await getSignerClient();
 
-	const amount = coins('300000000000000000000', 'peaka'); // 50
+	const amount = coins('100000000000000000000', 'peaka'); // 50
 
 	const gasPrice = GasPrice.fromString('100000000000peaka');
 
@@ -198,107 +208,14 @@ export async function randomSubmitMsg(
 	maciAccount: Account,
 	coordPubKey: PublicKey
 ) {
-	/**
-	 * 随机给一个项目投若干票
-	 */
-	// const plan = [
-	// 	[Math.floor(Math.random() * 10), Math.floor(Math.random() * 10)] as [
-	// 		number,
-	// 		number
-	// 	],
-	// ];
+
+	// 给每个项目投5票，一个voter投5个项目，所以是20票
 	const plan = [
-		[1, 1] as [number, number],
-		[2, 2] as [number, number],
-		[3, 3] as [number, number],
-		[4, 1] as [number, number],
-	];
-
-	const payload = batchGenMessage(stateIdx, maciAccount, coordPubKey, plan);
-
-	const msgs: MsgExecuteContractEncodeObject[] = payload.map(
-		({ msg, encPubkeys }) => ({
-			typeUrl: '/cosmwasm.wasm.v1.MsgExecuteContract',
-			value: MsgExecuteContract.fromPartial({
-				sender: address,
-				contract: contractAddress,
-				msg: new TextEncoder().encode(
-					JSON.stringify(
-						stringizing({
-							publish_message: {
-								enc_pub_key: {
-									x: encPubkeys[0],
-									y: encPubkeys[1],
-								},
-								message: {
-									data: msg,
-								},
-							},
-						})
-					)
-				),
-			}),
-		})
-	);
-
-	const gasPrice = GasPrice.fromString('100000000000peaka');
-	const fee = calculateFee(20000000 * msgs.length, gasPrice);
-	try {
-		const currentHeight = await client.getHeight();
-		const timeoutHeight = BigInt(currentHeight) + BigInt(4); // 假设每个区块5秒,4个区块大约20秒
-
-		const result = await client.signAndBroadcast(
-			address,
-			msgs,
-			fee,
-			undefined,
-			timeoutHeight
-		);
-
-		console.log(stateIdx, `pub_msg hash ${result.transactionHash}`);
-		return result;
-	} catch (err) {
-		// 将 err 类型显式地转换为 Error
-		if (err instanceof Error) {
-			if (
-				err.message.includes(
-					'You might want to check later. There was a wait of 16 seconds.'
-				)
-			) {
-				console.log(err.message);
-				console.log('skip this error and waiting 16s.');
-				await delay(17000);
-			} else {
-				console.error('Unexpected error', err);
-
-				throw err;
-			}
-		}
-	}
-}
-
-export async function randomSubmitMsg2(
-	client: SigningCosmWasmClient,
-	contractAddress: string,
-	address: string,
-	stateIdx: number,
-	maciAccount: Account,
-	coordPubKey: PublicKey
-) {
-	/**
-	 * 随机给一个项目投若干票
-	 */
-	// const plan = [
-	// 	[Math.floor(Math.random() * 10), Math.floor(Math.random() * 10)] as [
-	// 		number,
-	// 		number
-	// 	],
-	// ];
-	const plan = [
-		[0, 1] as [number, number],
-		[2, 2] as [number, number],
-		[3, 3] as [number, number],
-		[4, 1] as [number, number],
+		[0, 5] as [number, number],
+		[1, 5] as [number, number],
+		[2, 5] as [number, number],
+		[3, 5] as [number, number],
+		[4, 5] as [number, number],
 	];
 
 	const payload = batchGenMessage(stateIdx, maciAccount, coordPubKey, plan);
@@ -484,279 +401,309 @@ export async function randomSubmitDeactivateMsg(
 	}
 }
 
-async function batch_2_amaci_test(
+/**
+ * 执行带重试机制的异步操作
+ * @param operation 要执行的异步操作
+ * @param maxRetries 最大重试次数
+ * @param retryDelay 重试间隔(毫秒)
+ * @param operationName 操作名称(用于日志)
+ */
+async function executeWithRetry<T>(
+	operation: () => Promise<T>,
+	maxRetries: number = 5,
+	retryDelay: number = 5000,
+	operationName: string = "操作"
+): Promise<T> {
+	let retries = 0;
+	
+	while (true) {
+		try {
+			return await operation();
+		} catch (error) {
+			retries++;
+			
+			// 检查是否是网络错误
+			const isNetworkError = error instanceof Error && 
+				(error.message.includes("Bad status on response: 502") || 
+				 error.message.includes("network") ||
+				 error.message.includes("timeout") ||
+				 error.message.includes("connection"));
+			
+			if (retries <= maxRetries && isNetworkError) {
+				console.log(`${operationName}失败(网络错误)，${retries}/${maxRetries}次重试，等待${retryDelay/1000}秒...`);
+				await delay(retryDelay);
+				// 每次重试增加延迟时间
+				retryDelay = Math.min(retryDelay * 1.5, 30000);
+			} else {
+				throw error;
+			}
+		}
+	}
+}
+
+/**
+ * 批量测试函数，支持多用户投票（异步版本）
+ * @param creator 创建者钱包
+ * @param operator 操作者地址
+ * @param voters 用户钱包数组
+ * @param operatorPubkey 操作者公钥
+ * @param end_voting 投票结束时间
+ * @param skipUserOperation 是否跳过用户操作
+ * @param title 投票轮次标题
+ * @param skipDeactivate 是否跳过用户注销操作
+ * @param circuitType 电路类型
+ */
+async function batch_2115_voter(
 	creator: DirectSecp256k1HdWallet,
 	operator: string,
-	user1: DirectSecp256k1HdWallet,
-	user2: DirectSecp256k1HdWallet,
+	voters: DirectSecp256k1HdWallet[],
 	operatorPubkey: string[],
 	end_voting: Date,
 	skipUserOperation: boolean,
 	title: string,
 	skipDeactivate: boolean,
-	user1StateIdx: number,
-	user2StateIdx: number,
 	circuitType: string
 ) {
-	const pubkeyFilePath = './src/test/user_pubkey.json';
-	const logsFilePath = './src/test/user_logs.json';
-
+	console.log(`当前有 ${voters.length} 个用户参与投票`);
+	
+	// 获取注册客户端
 	let registryClient = await getRegistryClientBy(
 		creator,
 		registryContractAddress
 	);
 
-	let creatorClient = await getContractClientByWallet(creator);
+	// 为每个用户准备信息
+	const userAddresses: string[] = [];
+	const userClients: SigningCosmWasmClient[] = [];
+	const maciAccounts: Account[] = [];
+	const userStateIndices: number[] = [];
+	
+	// 并行获取用户信息
+	console.log("准备用户信息...");
+	// 顺序获取用户信息，避免nonce问题
+	for (let i = 0; i < voters.length; i++) {
+		const accountDetail = await voters[i].getAccounts();
+		userAddresses.push(accountDetail[0].address);
+		userClients.push(await getContractClientByWallet(voters[i]));
+		maciAccounts.push(genKeypair());
+	}
 
-	let user1Address = (await user1.getAccounts())[0].address;
-	let user2Address = (await user2.getAccounts())[0].address;
-	let user1Client = await getContractClientByWallet(user1);
-	let user2Client = await getContractClientByWallet(user2);
+	console.log("用户信息准备完成...");
 
-	let maciAccount1 = genKeypair();
-	let maciAccount2 = genKeypair();
-
-	const base_time = new Date();
-	// const start_voting = new Date(base_time.getTime() + 2 * 60 * 1000); // 10 分钟
-	const start_voting = new Date(base_time.getTime() + 2 * 60 * 1000); // 10 分钟
-
+	// 设置时间
+	const start_voting = new Date();
+	const end_voting_re = new Date(start_voting.getTime() + 12 * 60 * 1000);
 	console.log(`Current time: ${start_voting.toLocaleTimeString()}`);
+	console.log(`End voting time: ${end_voting_re.toLocaleTimeString()}`);
 
-	const end_voting_re = new Date(start_voting.getTime() + 12 * 60 * 1000); // 1 小时
-	console.log(`Time after 2 minutes: ${end_voting_re.toLocaleTimeString()}`);
-
-	let contractAddress = '';
-	// try {
+	// 创建协调者公钥
 	const coordPubKey: PublicKey = [
 		BigInt(operatorPubkey[0]),
 		BigInt(operatorPubkey[1]),
 	];
 	console.log('coordPubKey', coordPubKey);
 
+	// 创建合约
+	let contractAddress = '';
 	while (!contractAddress) {
 		try {
+			// 准备白名单
+			const whitelist = {
+				users: userAddresses.map(addr => ({ addr }))
+			};
+			
 			contractAddress = await createAMACIRound(
 				registryClient,
 				operator,
 				title,
 				start_voting,
 				end_voting_re,
-				'5',
-				'5',
-				{
-					users: [
-						{
-							addr: user1Address,
-						},
-						{
-							addr: user2Address,
-						},
-					],
-				},
+				'25', // 最大投票者数量
+				'5',  // 最大选项数量
+				whitelist,
 				circuitType
 			);
+			console.log(`Contract deployed at: ${contractAddress}`);
 		} catch (error) {
 			console.log('Deploy failed, retrying...', error);
-			await delay(16000); // 延迟一段时间再重试
+			await delay(16000);
 		}
 	}
 
-	await delay(6000);
-	let creatorAMaciClient = await getAMaciClientBy(creator, contractAddress);
-
-	let setRoundInfoRes = await creatorAMaciClient.setRoundInfo({
-		roundInfo: {
-			title: 'new ' + title,
-			description: 'new description',
-			link: 'https://new.com',
-		},
-	});
-	console.log(`setRoundInfoRes: ${setRoundInfoRes.transactionHash}`);
-	await delay(6000);
-	let setVoteOptionsMapRes = await creatorAMaciClient.setVoteOptionsMap({
-		voteOptionMap: [
-			'new option1',
-			'new option2',
-			'new option3',
-			'new option4',
-			'new option5',
-		],
-	});
-	console.log(
-		`setVoteOptionsMapRes: ${setVoteOptionsMapRes.transactionHash}`
-	);
-	await waitUntil(start_voting);
 	await delay(16000);
 
-	if (skipUserOperation === true) {
-		console.log('skip user operation');
-	} else {
-		console.log('start user operation');
-		if (contractAddress !== '') {
-			let creatorMaciClient = await getAMaciClientBy(
-				creator,
-				contractAddress
-			);
-			let user1MaciClient = await getAMaciClientBy(
-				user1,
-				contractAddress
-			);
-			let user2MaciClient = await getAMaciClientBy(
-				user2,
-				contractAddress
-			);
+	if (skipUserOperation) {
+		console.log('Skip user operation');
+		return;
+	}
 
+	console.log('Start user operation');
+	
+	// 获取所有用户的MACI客户端
+	const userMaciClients: AMaciClient[] = [];
+	for (let i = 0; i < voters.length; i++) {
+		userMaciClients.push(await getAMaciClientBy(voters[i], contractAddress));
+	}
+
+	try {
+		// 检查初始注册数量
+		let numSignUp = await userMaciClients[0].getNumSignUp();
+		console.log(`Initial sign-ups: ${numSignUp}`);
+		
+		// 用户注册 - 顺序执行
+		console.log("开始用户注册...");
+		const gasPrice = GasPrice.fromString('100000000000peaka');
+		const signUpFee = calculateFee(60000000, gasPrice);
+
+		// 顺序注册所有用户
+		for (let i = 0; i < voters.length; i++) {
 			try {
-				let grant_res = await creatorMaciClient.grant({
-					maxAmount: '100000000000000000000000',
-				});
-				console.log(`grant hash: ${grant_res.transactionHash}`);
-
-				let bond_res = await creatorMaciClient.bond('auto', undefined, [
-					{
-						denom: 'peaka',
-						amount: '7000000000000000000',
+				console.log(`注册用户 ${i + 1}/${voters.length}...`);
+				
+				const pubkey = {
+					x: uint256FromDecimalString(maciAccounts[i].pubKey[0].toString()),
+					y: uint256FromDecimalString(maciAccounts[i].pubKey[1].toString()),
+				};
+				
+				// 使用重试机制进行注册
+				await executeWithRetry(
+					async () => {
+						const res = await userMaciClients[i].signUp({ pubkey }, signUpFee);
+						console.log(`User${i + 1} signup hash: ${res.transactionHash}`);
 					},
-				]);
-				console.log(`bond hash: ${bond_res.transactionHash}`);
-
-				let numSignUp = await user1MaciClient.getNumSignUp();
-				console.log(`start num_sign_ups: ${numSignUp}`); // Expect 0
-				await delay(500);
-
-				let pubkey0 = {
-					x: uint256FromDecimalString(
-						maciAccount1.pubKey[0].toString()
-					),
-					y: uint256FromDecimalString(
-						maciAccount1.pubKey[1].toString()
-					),
-				};
-
-				let pubkey1 = {
-					x: uint256FromDecimalString(
-						maciAccount2.pubKey[0].toString()
-					),
-					y: uint256FromDecimalString(
-						maciAccount2.pubKey[1].toString()
-					),
-				};
-				try {
-					const gasPrice = GasPrice.fromString('100000000000peaka');
-					const signUpFee = calculateFee(60000000, gasPrice);
-
-					const grantFee: StdFee = {
-						amount: signUpFee.amount,
-						gas: signUpFee.gas,
-						granter: contractAddress,
-					};
-
-					let user1_res = await user1MaciClient.signUp(
-						{
-							pubkey: pubkey0,
-						},
-						grantFee
-					);
-					console.log(
-						`user1 signup hash: ${user1_res.transactionHash}`
-					);
-				} catch (err) {
-					// 将 err 类型显式地转换为 Error
-					if (err instanceof Error) {
-						if (
-							err.message.includes(
-								'You might want to check later. There was a wait of 16 seconds.'
-							)
-						) {
-							console.log(err.message);
-							console.log('skip this error and waiting 16s.');
-							await delay(17000);
-						} else {
-							console.error('Unexpected error', err);
-
-							throw err;
-						}
-					}
-				}
-
-				try {
-					let user2_res = await user2MaciClient.signUp({
-						pubkey: pubkey1,
-					});
-					console.log(
-						`user2 signup hash: ${user2_res.transactionHash}`
-					);
-				} catch (err) {
-					// 将 err 类型显式地转换为 Error
-					if (err instanceof Error) {
-						if (
-							err.message.includes(
-								'You might want to check later. There was a wait of 16 seconds.'
-							)
-						) {
-							console.log(err.message);
-							console.log('skip this error and waiting 16s.');
-							await delay(17000);
-						} else {
-							console.error('Unexpected error', err);
-
-							throw err;
-						}
-					}
-				}
-
-				let user1_pubkey_state_idx = await user1MaciClient.signuped({
-					pubkeyX: maciAccount1.pubKey[0].toString(),
-				});
-				console.log(
-					`user1 pubkey state idx: ${user1_pubkey_state_idx}`
+					5,  // 最多重试5次
+					5000,  // 初始延迟5秒
+					`User${i + 1}注册`
 				);
-				if (skipDeactivate === false) {
-					await randomSubmitDeactivateMsg(
-						user1MaciClient,
-						Number(user1_pubkey_state_idx) - 1,
-						maciAccount1,
-						coordPubKey
-					);
-				}
-
-				await randomSubmitMsg(
-					user1Client,
-					contractAddress,
-					user1Address,
-					user1StateIdx,
-					// Number(user1_pubkey_state_idx) - 1,
-					maciAccount1,
-					coordPubKey
-				);
-				let user2_pubkey_state_idx = await user2MaciClient.signuped({
-					pubkeyX: maciAccount2.pubKey[0].toString(),
-				});
-				console.log(
-					`user2 pubkey state idx: ${user2_pubkey_state_idx}`
-				);
-
-				await randomSubmitMsg2(
-					user2Client,
-					contractAddress,
-					user2Address,
-					user2StateIdx,
-					// Number(user2_pubkey_state_idx) - 1,
-					maciAccount2,
-					coordPubKey
-				);
-			} catch (error) {
-				console.error('Error start round:', error);
+				
+			} catch (err) {
+				console.error(`User${i + 1} signup error:`, err);
+				// 失败后等待更长时间再继续
+				await delay(5000);
 			}
-		} else {
-			process.exit;
 		}
+		
+		// 等待12s，确保交易被处理
+		console.log("等待12s,确保交易被处理...");
+		await delay(12000);
+		
+		// 获取用户状态索引 - 并行执行
+		console.log("获取用户状态索引...");
+		
+		for (let i = 0; i < voters.length; i++) {
+			try {
+				const stateIdx = await userMaciClients[i].signuped({
+					pubkeyX: maciAccounts[i].pubKey[0].toString(),
+				});
+				console.log(`User${i + 1} state index: ${stateIdx}`);
+				userStateIndices.push(Number(stateIdx) - 1);
+			} catch (err) {
+				console.error(`Failed to get User${i + 1} state index:`, err);
+				userStateIndices.push(i); // 失败时使用索引作为备用
+			}
+		}
+		
+		// 用户注销 - 并行执行，但分批处理
+		if (!skipDeactivate) {
+			console.log("开始用户注销...");
+			
+			// 减小批次大小，从5个减少到2个
+			const batchSize = 2;
+			
+			for (let i = 0; i < voters.length; i += batchSize) {
+				const currentBatch = voters.slice(i, Math.min(i + batchSize, voters.length));
+				const batchIndices = Array.from({length: currentBatch.length}, (_, idx) => i + idx);
+				
+				console.log(`处理注销批次 ${Math.floor(i/batchSize) + 1}/${Math.ceil(voters.length/batchSize)}`);
+				
+				// 并行处理当前批次，但每个操作都有自己的重试机制
+				await Promise.all(
+					batchIndices.map(async (userIndex) => {
+						try {
+							await executeWithRetry(
+								async () => {
+									await randomSubmitDeactivateMsg(
+										userMaciClients[userIndex],
+										userStateIndices[userIndex],
+										maciAccounts[userIndex],
+										coordPubKey
+									);
+									console.log(`User${userIndex + 1} deactivated`);
+								},
+								3,
+								5000,
+								`User${userIndex + 1}注销`
+							);
+						} catch (err) {
+							console.error(`User${userIndex + 1} deactivate error:`, err);
+						}
+					})
+				);
+				
+				// 每个批次之间增加延迟
+				console.log("等待5s，避免服务器过载...");
+				await delay(5000);
+			}
+			
+			// 添加短暂延迟，确保交易被处理
+			console.log("等待12s,确保交易被处理...");
+			await delay(12000);
+		}
+		
+		// 用户投票 - 并行执行，但分批处理
+		console.log("开始用户投票...");
+		
+		// 分批投票，每批2个用户
+		const VotebatchSize = 2;
+		
+		for (let i = 0; i < voters.length; i += VotebatchSize) {
+			const currentBatch = voters.slice(i, Math.min(i + VotebatchSize, voters.length));
+			const batchIndices = Array.from({length: currentBatch.length}, (_, idx) => i + idx);
+			
+			console.log(`处理投票批次 ${Math.floor(i/VotebatchSize) + 1}/${Math.ceil(voters.length/VotebatchSize)}`);
+			
+			// 并行处理当前批次，但每个操作都有自己的重试机制
+			await Promise.all(
+				batchIndices.map(async (userIndex) => {
+					try {
+						await executeWithRetry(
+							async () => {
+								await randomSubmitMsg(
+									userClients[userIndex],
+									contractAddress,
+									userAddresses[userIndex],
+									userStateIndices[userIndex],
+									maciAccounts[userIndex],
+									coordPubKey
+								);
+								console.log(`User${userIndex + 1} vote submitted`);
+							},
+							3,
+							5000,
+							`User${userIndex + 1}投票`
+						);
+					} catch (err) {
+						console.error(`User${userIndex + 1} vote error:`, err);
+					}
+				})
+			);
+			
+			// 每个批次之间增加延迟
+			console.log("等待5s，避免服务器过载...");
+			await delay(5000);
+		}
+		
+		console.log("All user operations completed");
+		
+	} catch (error) {
+		console.error('Error during user operations:', error);
 	}
 
 	await delay(16000);
+	console.log("Test completed");
 }
 
-async function batch_4_amaci_test(
+async function batch_42225_voter(
 	creator: DirectSecp256k1HdWallet,
 	operator: string,
 	user1: DirectSecp256k1HdWallet,
@@ -777,9 +724,6 @@ async function batch_4_amaci_test(
 	title: string,
 	circuitType: string
 ) {
-	const pubkeyFilePath = './src/test/user_pubkey.json';
-	const logsFilePath = './src/test/user_logs.json';
-
 	let registryClient = await getRegistryClientBy(
 		creator,
 		registryContractAddress
@@ -831,11 +775,11 @@ async function batch_4_amaci_test(
 
 	const base_time = new Date();
 	// const start_voting = new Date(base_time.getTime() + 2 * 60 * 1000); // 10 分钟
-	const start_voting = new Date(base_time.getTime() + 2 * 60 * 1000); // 10 分钟
+	const start_voting = new Date(base_time.getTime()); // 10 分钟
 
 	console.log(`Current time: ${start_voting.toLocaleTimeString()}`);
 
-	const end_voting_re = new Date(start_voting.getTime() + 32 * 60 * 1000); // 1 小时
+	const end_voting_re = new Date(start_voting.getTime() + 30 * 60 * 1000); // 1 小时
 	console.log(`Time after 2 minutes: ${end_voting_re.toLocaleTimeString()}`);
 	// 增加10s
 	// const end_voting = new Date(start_voting.getTime() + 30 * 60 * 1000); // 10s
@@ -905,35 +849,6 @@ async function batch_4_amaci_test(
 			await delay(16000); // 延迟一段时间再重试
 		}
 	}
-
-	await delay(6000);
-	let creatorAMaciClient = await getAMaciClientBy(creator, contractAddress);
-
-	let setRoundInfoRes = await creatorAMaciClient.setRoundInfo({
-		roundInfo: {
-			title: 'new ' + title,
-			description: 'new description',
-			link: 'https://new.com',
-		},
-	});
-	console.log(`setRoundInfoRes: ${setRoundInfoRes.transactionHash}`);
-	await delay(6000);
-	let setVoteOptionsMapRes = await creatorAMaciClient.setVoteOptionsMap({
-		voteOptionMap: [
-			'new option1',
-			'new option2',
-			'new option3',
-			'new option4',
-			'new option5',
-			'new option6',
-		],
-	});
-	console.log(
-		`setVoteOptionsMapRes: ${setVoteOptionsMapRes.transactionHash}`
-	);
-	await waitUntil(start_voting);
-	await delay(16000);
-
 	if (skipUserOperation === true) {
 		console.log('skip user operation');
 	} else {
@@ -989,8 +904,6 @@ async function batch_4_amaci_test(
 			);
 
 			try {
-				const pubkeyContent = await readFile(pubkeyFilePath);
-				const logsContent = await readFile(logsFilePath);
 
 				let numSignUp = await user1MaciClient.getNumSignUp();
 				console.log(`start num_sign_ups: ${numSignUp}`); // Expect 0
@@ -998,6 +911,9 @@ async function batch_4_amaci_test(
 
 				const gasPrice = GasPrice.fromString('100000000000peaka');
 				const fee = calculateFee(39000000, gasPrice);
+
+
+
 				let pubkey0 = {
 					x: uint256FromDecimalString(
 						maciAccount1.pubKey[0].toString()
@@ -1512,7 +1428,7 @@ async function batch_4_amaci_test(
 					coordPubKey
 				);
 
-				await randomSubmitMsg2(
+				await randomSubmitMsg(
 					user8Client,
 					contractAddress,
 					user8Address,
@@ -1521,7 +1437,7 @@ async function batch_4_amaci_test(
 					coordPubKey
 				);
 
-				await randomSubmitMsg2(
+				await randomSubmitMsg(
 					user9Client,
 					contractAddress,
 					user9Address,
@@ -1567,40 +1483,17 @@ async function batch_4_amaci_test(
 	await delay(16000);
 }
 
-export async function amaciregistrytest(roundNum: number) {
-	let accountAddresslist: string[] = [];
-	let signerList: DirectSecp256k1HdWallet[] = [];
+export async function amaciregistrytestround(roundNum: number, voterNum: number, voting_period: number) {
 	let start = 0;
-	// let roundNum = 1;
 	let thread = 3 * roundNum - 1; // 3 multi - 1
-	for (let i = 1; i <= 13; i++) {
-		let signer = await generateAccount(i);
-		let accountDetail = await signer.getAccounts();
-		accountAddresslist.push(accountDetail[0].address);
-		signerList.push(signer);
+	
+	// 创建用户钱包
+	const allVoters: DirectSecp256k1HdWallet[] = [];
+	for (let i = 1; i <= voterNum; i++) {
+		allVoters.push(await generateAccount(i));
 	}
-
-	// await batchSend(accountAddresslist);
-	// await delay(10000);
-	// await batchSendBig(accountAddresslist.slice(0, 2));
-	// await delay(10000);
-
+	
 	let operatorList = [
-		// {
-		//      operator: 'dora15yfyalf872yut8cecy8p2j7rer9dd98rlg3xtq',
-		//      pubkey: [
-		//              '7421895562686352826563669933550830041677218724210020561066263498415701325176',
-		//              '15885728170420100812951141355295788125825926252169931895803773048587171524289',
-		//      ],
-		// },
-
-		{
-			operator: 'dora149n5yhzgk5gex0eqmnnpnsxh6ys4exg5xyqjzm',
-			pubkey: [
-				'3457695696360848193502608246254422070002779638488733236214423797131720399296',
-				'10721319678265866063861912417916780787229942812531198850410477756757845824096',
-			],
-		},
 		{
 			operator: 'dora1zrd68hgj5uzqpm5x8v6pylwqjsnltp6nyr8s0k',
 			pubkey: [
@@ -1608,286 +1501,31 @@ export async function amaciregistrytest(roundNum: number) {
 				'6821363586466624930174394695023126212730779300840339744873622125361194404156',
 			],
 		},
-		{
-			operator: 'dora1k383vky62t85496xwp6qnalw5u2qj4tvsneluc',
-			pubkey: [
-				'339457423059495574326820494023899998621467676828017937021309840270576858799',
-				'4138216818137880315912826301418122715579481744260360896824552739285524788661',
-			],
-		},
 	];
 
 	const start_voting = new Date();
-	const end_voting = new Date(start_voting.getTime() + 12 * 60 * 1000); // 10s
+	const end_voting = new Date(start_voting.getTime() + voting_period * 60 * 1000); 
 
 	for (let i = start; i <= thread; i += 3) {
+		// 创建者钱包
 		let creator = await generateAccount(0);
-		let user1 = await generateAccount(1);
-		let user2 = await generateAccount(2);
-		let user3 = await generateAccount(3);
-		let user4 = await generateAccount(4);
-		let user5 = await generateAccount(5);
-		let user6 = await generateAccount(6);
-		let user7 = await generateAccount(7);
-		let user8 = await generateAccount(8);
-		let user9 = await generateAccount(9);
-		let user10 = await generateAccount(10);
-		let user11 = await generateAccount(11);
-		let user12 = await generateAccount(12);
-
-		// await delay(12000);
-		console.log(`---- Start Round: ${i / 3} ----`);
-		console.log(
-			`${(i % (operatorList.length * 3)) / 3} operator: ${
-				operatorList[(i % (operatorList.length * 3)) / 3].operator
-			}`
-		);
-
-		// // console.log('test: amaci 2');
-		let title = '2-1-1-5 1p1v with deactivate msg';
-		let skipDeactivate = false;
-		let user1StateIdx = 0;
-		let user2StateIdx = 1;
-		let circuitType = '0';
-		await batch_2_amaci_test(
+		
+		console.log(`---- Start Round: ${Math.floor(i/3) + 1} ----`);
+		
+		let title = '2-1-1-5 1p1v benchmark 25 voter no deactivate [async]';
+		let skipDeactivate = true;
+		let circuitType = '0'; // 1p1v
+		
+		await batch_2115_voter(
 			creator,
-			operatorList[(i % (operatorList.length * 3)) / 3].operator,
-			user1,
-			user2,
-			operatorList[(i % (operatorList.length * 3)) / 3].pubkey,
+			operatorList[0].operator,
+			allVoters,
+			operatorList[0].pubkey,
 			end_voting,
-			false,
+			false, // 不跳过用户操作
 			title,
 			skipDeactivate,
-			user1StateIdx,
-			user2StateIdx,
 			circuitType
 		);
-
-		title = '2-1-1-5 1p1v';
-		skipDeactivate = true;
-		user1StateIdx = 0;
-		user2StateIdx = 1;
-		circuitType = '0';
-		await batch_2_amaci_test(
-			creator,
-			operatorList[(i % (operatorList.length * 3)) / 3].operator,
-			user1,
-			user2,
-			operatorList[(i % (operatorList.length * 3)) / 3].pubkey,
-			end_voting,
-			false,
-			title,
-			skipDeactivate,
-			user1StateIdx,
-			user2StateIdx,
-			circuitType
-		);
-
-		// // title: 'new contract 2-1-1-5 qv with wrong stateIdx: user1: 10, user2: 15',
-		// // title: 'new contract 4-2-2-25 1p1v with deactivate msg',
-		// title = '2-1-1-5 1p1v with wrong stateIdx: user1: 1, user2: 2';
-		// skipDeactivate = true;
-		// user1StateIdx = 1;
-		// user2StateIdx = 2;
-		// circuitType = '0';
-		// await batch_2_amaci_test(
-		// 	creator,
-		// 	operatorList[(i % (operatorList.length * 3)) / 3].operator,
-		// 	user1,
-		// 	user2,
-		// 	operatorList[(i % (operatorList.length * 3)) / 3].pubkey,
-		// 	end_voting,
-		// 	false,
-		// 	title,
-		// 	skipDeactivate,
-		// 	user1StateIdx,
-		// 	user2StateIdx,
-		// 	circuitType
-		// );
-
-		// title = '2-1-1-5 1p1v with wrong stateIdx: user1: 10, user2: 15';
-		// skipDeactivate = true;
-		// user1StateIdx = 10;
-		// user2StateIdx = 15;
-		// circuitType = '0';
-		// await batch_2_amaci_test(
-		// 	creator,
-		// 	operatorList[(i % (operatorList.length * 3)) / 3].operator,
-		// 	user1,
-		// 	user2,
-		// 	operatorList[(i % (operatorList.length * 3)) / 3].pubkey,
-		// 	end_voting,
-		// 	false,
-		// 	title,
-		// 	skipDeactivate,
-		// 	user1StateIdx,
-		// 	user2StateIdx,
-		// 	circuitType
-		// );
-
-		title = '2-1-1-5 qv with deactivate msg';
-		skipDeactivate = false;
-		user1StateIdx = 0;
-		user2StateIdx = 1;
-		circuitType = '1';
-		await batch_2_amaci_test(
-			creator,
-			operatorList[(i % (operatorList.length * 3)) / 3].operator,
-			user1,
-			user2,
-			operatorList[(i % (operatorList.length * 3)) / 3].pubkey,
-			end_voting,
-			false,
-			title,
-			skipDeactivate,
-			user1StateIdx,
-			user2StateIdx,
-			circuitType
-		);
-
-		title = '2-1-1-5 qv';
-		skipDeactivate = true;
-		user1StateIdx = 0;
-		user2StateIdx = 1;
-		circuitType = '1';
-		await batch_2_amaci_test(
-			creator,
-			operatorList[(i % (operatorList.length * 3)) / 3].operator,
-			user1,
-			user2,
-			operatorList[(i % (operatorList.length * 3)) / 3].pubkey,
-			end_voting,
-			false,
-			title,
-			skipDeactivate,
-			user1StateIdx,
-			user2StateIdx,
-			circuitType
-		);
-
-		// title = '2-1-1-5 qv with wrong stateIdx: user1: 1, user2: 2';
-		// skipDeactivate = true;
-		// user1StateIdx = 1;
-		// user2StateIdx = 2;
-		// circuitType = '1';
-		// await batch_2_amaci_test(
-		// 	creator,
-		// 	operatorList[(i % (operatorList.length * 3)) / 3].operator,
-		// 	user1,
-		// 	user2,
-		// 	operatorList[(i % (operatorList.length * 3)) / 3].pubkey,
-		// 	end_voting,
-		// 	false,
-		// 	title,
-		// 	skipDeactivate,
-		// 	user1StateIdx,
-		// 	user2StateIdx,
-		// 	circuitType
-		// );
-
-		// title = '2-1-1-5 qv with wrong stateIdx: user1: 10, user2: 15';
-		// skipDeactivate = true;
-		// user1StateIdx = 10;
-		// user2StateIdx = 15;
-		// circuitType = '1';
-		// await batch_2_amaci_test(
-		// 	creator,
-		// 	operatorList[(i % (operatorList.length * 3)) / 3].operator,
-		// 	user1,
-		// 	user2,
-		// 	operatorList[(i % (operatorList.length * 3)) / 3].pubkey,
-		// 	end_voting,
-		// 	false,
-		// 	title,
-		// 	skipDeactivate,
-		// 	user1StateIdx,
-		// 	user2StateIdx,
-		// 	circuitType
-		// );
-
-		title = '4-2-2-25 qv with deactivate msg';
-		circuitType = '1';
-		await batch_4_amaci_test(
-			creator,
-			operatorList[(i % (operatorList.length * 3)) / 3].operator,
-			user1,
-			user2,
-			user3,
-			user4,
-			user5,
-			user6,
-			user7,
-			user8,
-			user9,
-			user10,
-			user11,
-			user12,
-			operatorList[(i % (operatorList.length * 3)) / 3].pubkey,
-			end_voting,
-			false,
-			title,
-			circuitType
-		);
-
-		title = '4-2-2-25 1p1v with deactivate msg';
-		circuitType = '0';
-		await batch_4_amaci_test(
-			creator,
-			operatorList[(i % (operatorList.length * 3)) / 3].operator,
-			user1,
-			user2,
-			user3,
-			user4,
-			user5,
-			user6,
-			user7,
-			user8,
-			user9,
-			user10,
-			user11,
-			user12,
-			operatorList[(i % (operatorList.length * 3)) / 3].pubkey,
-			end_voting,
-			false,
-			title,
-			circuitType
-		);
-
-		// // 根据当前批次选择不同的处理函数
-		// if ((i / 3) % 2 === 0) {
-		// 	console.log('test: amaci 2');
-		// 	await batch_2_amaci_test(
-		// 		creator,
-		// 		operatorList[(i % (operatorList.length * 3)) / 3].operator,
-		// 		user1,
-		// 		user2,
-		// 		operatorList[(i % (operatorList.length * 3)) / 3].pubkey,
-		// 		end_voting,
-		// 		false
-		// 	);
-		// } else {
-		// 	console.log('test: amaci 4');
-		// 	console.log('skip amaci 4');
-		// 	await batch_4_amaci_test(
-		// 		creator,
-		// 		operatorList[(i % (operatorList.length * 3)) / 3].operator,
-		// 		user1,
-		// 		user2,
-		// 		user3,
-		// 		user4,
-		// 		user5,
-		// 		user6,
-		// 		user7,
-		// 		user8,
-		// 		user9,
-		// 		user10,
-		// 		user11,
-		// 		user12,
-		// 		operatorList[(i % (operatorList.length * 3)) / 3].pubkey,
-		// 		end_voting,
-		// 		false
-		// 	);
-		// }
 	}
 }
