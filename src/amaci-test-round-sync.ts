@@ -418,11 +418,11 @@ async function batch_2115_voter(
 	operator: string,
 	voters: DirectSecp256k1HdWallet[],
 	operatorPubkey: string[],
-	end_voting: Date,
 	skipUserOperation: boolean,
 	title: string,
 	skipDeactivate: boolean,
-	circuitType: string
+	circuitType: string,
+	voting_period: number
 ) {
 	console.log(`当前有 ${voters.length} 个用户参与投票`);
 	
@@ -445,7 +445,7 @@ async function batch_2115_voter(
 	}
 
 	const start_voting = new Date();
-	const end_voting_re = new Date(start_voting.getTime() + 12 * 60 * 1000);
+	const end_voting_re = new Date(start_voting.getTime() + voting_period * 60 * 1000);
 	console.log(`Current time: ${start_voting.toLocaleTimeString()}`);
 	console.log(`End voting time: ${end_voting_re.toLocaleTimeString()}`);
 
@@ -1388,9 +1388,6 @@ export async function amaciBenchmarkRoundsSyncExecute(roundNum: number, voterNum
 		},
 	];
 
-	const start_voting = new Date();
-	const end_voting = new Date(start_voting.getTime() + voting_period * 60 * 1000); 
-
 	for (let i = start; i <= thread; i += 3) {
 		// 创建者钱包
 		let creator = await generateAccount(0);
@@ -1406,11 +1403,11 @@ export async function amaciBenchmarkRoundsSyncExecute(roundNum: number, voterNum
 			operatorList[0].operator,
 			allVoters,
 			operatorList[0].pubkey,
-			end_voting,
 			false, // 不跳过用户操作
 			title,
 			skipDeactivate,
-			circuitType
+			circuitType,
+			voting_period
 		);
 	}
 }

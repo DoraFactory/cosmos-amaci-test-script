@@ -35,6 +35,7 @@ import { queryQfVoters } from './query-qf-account';
 import { amaciregistrytestround } from './amaciregistrytestaround';
 import { distributeToken } from './distributeToken';
 import { amaciBenchmarkRoundsSyncExecute } from './amaci-test-round-sync';
+import { amaciTestRoundAsyncExecute } from './amaci-test-rounds-async';
 
 type DelegatorData = {
 	id: number;
@@ -139,7 +140,8 @@ async function main() {
 	// await distributeToken();
 	// no deactive 2115 3voter
 	// 第一个数字代表一共跑几个round，第二个数字代表一共多少个用户参与vote,第三个数字代表voting_period(mins)
-	await amaciBenchmarkRoundsSyncExecute(1, 3, 6);
+	// await amaciBenchmarkRoundsSyncExecute(1, 25, 20);
+	await amaciTestRoundAsyncExecute(1, 5, 11);
 }
 
 main();
