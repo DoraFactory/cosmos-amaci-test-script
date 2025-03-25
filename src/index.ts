@@ -139,9 +139,13 @@ async function main() {
 
 	// await distributeToken();
 	// no deactive 2115 3voter
-	// 第一个数字代表一共跑几个round，第二个数字代表一共多少个用户参与vote,第三个数字代表voting_period(mins)
+	// 第一个数字代表一共跑几个round，第二个数字代表一共多少个用户参与vote,第三个数字代表voting_period(mins),第四个数字代表batchSize(异步处理一次处理多少个)
+	await amaciTestRoundAsyncExecute(2, 25, 25, 5);
 	// await amaciBenchmarkRoundsSyncExecute(1, 25, 20);
-	await amaciTestRoundAsyncExecute(1, 5, 11);
 }
 
 main();
+
+
+// dora18565m0p6epdc6tj86yqnz6rsllqv2uly0edvjzwremkhg2g0yeuq09k3hp -> 25 voters  13min tally
+//  dora14jd9etyqjn2re863544mvcja0k8fyy240l3gywgwy3h74y7ah7yqac477s -> 25 voters  

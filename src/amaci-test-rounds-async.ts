@@ -269,8 +269,8 @@ export async function randomSubmitMsg(
 				console.log(`交易已提交但尚未确认，交易ID: ${txId}`);
 				
 				// 等待一段时间
-				console.log("等待30秒后继续...");
-				await delay(30000);
+				console.log("等待10秒后继续...");
+				await delay(10000);
 				
 				// 尝试查询交易状态
 				try {
@@ -290,7 +290,7 @@ export async function randomSubmitMsg(
 					code: 0,
 					rawLog: "Transaction submitted but confirmation timed out"
 				};
-			} else if (err.message.includes('You might want to check later. There was a wait of 16 seconds.')) {
+			} else if (err.message.includes('You might want to check later. There was a wait of 64 seconds.')) {
 				console.log(err.message);
 				console.log('skip this error and waiting 16s.');
 				await delay(17000);
@@ -483,7 +483,8 @@ async function batch_2115_voter(
 	title: string,
 	skipDeactivate: boolean,
 	circuitType: string,
-    voting_period: number
+    voting_period: number,
+    batchSize: number
 ) {
 	console.log(`当前有 ${voters.length} 个用户参与投票`);
 	
@@ -492,6 +493,7 @@ async function batch_2115_voter(
 		creator,
 		registryContractAddress
 	);
+
 
 	// 为每个用户准备信息
 	const userAddresses: string[] = [];
@@ -577,7 +579,7 @@ async function batch_2115_voter(
 		const signUpFee = calculateFee(60000000, gasPrice);
 
 		// 分批注册用户，每批5个用户
-		const signupBatchSize = 5;
+		const signupBatchSize = batchSize;
 		for (let i = 0; i < voters.length; i += signupBatchSize) {
 			const currentBatch = voters.slice(i, Math.min(i + signupBatchSize, voters.length));
 			const batchIndices = Array.from({length: currentBatch.length}, (_, idx) => i + idx);
@@ -609,8 +611,8 @@ async function batch_2115_voter(
 			);
 			
 			// 每个批次之间增加延迟
-			console.log("等待10s，避免服务器过载...");
-			await delay(10000);
+			console.log("等待5s，避免服务器过载...");
+			await delay(5000);
 		}
 		
 		// 等待12s，确保交易被处理
@@ -643,9 +645,6 @@ async function batch_2115_voter(
 		if (!skipDeactivate) {
 			console.log("开始用户注销...");
 			
-			// 减小批次大小，从5个减少到2个
-			const batchSize = 5;
-			
 			for (let i = 0; i < voters.length; i += batchSize) {
 				const currentBatch = voters.slice(i, Math.min(i + batchSize, voters.length));
 				const batchIndices = Array.from({length: currentBatch.length}, (_, idx) => i + idx);
@@ -677,8 +676,8 @@ async function batch_2115_voter(
 				);
 				
 				// 每个批次之间增加延迟
-				console.log("等待10s，避免服务器过载...");
-				await delay(10000);
+				console.log("等待5s，避免服务器过载...");
+				await delay(5000);
 			}
 			
 			// 添加短暂延迟，确保交易被处理
@@ -689,15 +688,15 @@ async function batch_2115_voter(
 		// 用户投票 - 并行执行，但分批处理
 		console.log("开始用户投票...");
 		
-		// 分批投票，每批1个用户
-		const VotebatchSize = 1;
+		const VotebatchSize = batchSize;
 		
 		for (let i = 0; i < voters.length; i += VotebatchSize) {
 			const currentBatch = voters.slice(i, Math.min(i + VotebatchSize, voters.length));
 			const batchIndices = Array.from({length: currentBatch.length}, (_, idx) => i + idx);
 			
 			console.log(`处理投票批次 ${Math.floor(i/VotebatchSize) + 1}/${Math.ceil(voters.length/VotebatchSize)}`);
-			
+			console.log(`Current time: ${new Date().toLocaleTimeString()}`);
+
 			// 并行处理当前批次，但每个操作都有自己的重试机制
 			await Promise.all(
 				batchIndices.map(async (userIndex) => {
@@ -724,9 +723,10 @@ async function batch_2115_voter(
 				})
 			);
 			
+			console.log(`Current time: ${new Date().toLocaleTimeString()}`);
 			// 每个批次之间增加延迟
-			console.log("等待10s，避免服务器过载...");
-			await delay(10000);
+			console.log("等待12s, 避免服务器过载...");
+			await delay(12000);
 		}
 		
 		console.log("All user operations completed");
@@ -1519,7 +1519,7 @@ async function batch_42225_voter(
 	await delay(16000);
 }
 
-export async function amaciTestRoundAsyncExecute(roundNum: number, voterNum: number, voting_period: number) {
+export async function amaciTestRoundAsyncExecute(roundNum: number, voterNum: number, voting_period: number, batchSize: number) {
 	let start = 0;
 	let thread = 3 * roundNum - 1; // 3 multi - 1
 	
@@ -1558,7 +1558,8 @@ export async function amaciTestRoundAsyncExecute(roundNum: number, voterNum: num
 			title,
 			skipDeactivate,
 			circuitType,
-            voting_period
+            voting_period,
+            batchSize
 		);
 	}
 }

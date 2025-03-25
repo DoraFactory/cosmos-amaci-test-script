@@ -10,7 +10,7 @@ export async function distributeToken() {
   const recipients: string[] = [];
 
   // 生成25个地址
-  for (let i = 1; i <= 25; i++) {
+  for (let i = 1; i <= 625; i++) {
     let signer = await generateAccount(i);
     let accountDetail = await signer.getAccounts();
     recipients.push(accountDetail[0].address);
