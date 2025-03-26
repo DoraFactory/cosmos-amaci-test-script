@@ -125,7 +125,7 @@ async function createAMACIRound(
 		[
 			{
 				denom: 'peaka',
-				amount: '50000000000000000000',
+				amount: '200000000000000000000',
 			},
 		]
 	);

@@ -148,7 +148,7 @@ async function main() {
 	// console.log(`\n========== 测试完成: ${testId} ==========\n\n`);
 
 	// await amaciBenchmarkRoundsSyncExecuteNoDeactive(1, 625, 2880, "4-2-2-25 only tally 625 voters");
-	await distributeToken();
+	// await distributeToken();
 }
 
 main().catch(console.error);
