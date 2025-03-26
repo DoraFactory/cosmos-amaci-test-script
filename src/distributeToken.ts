@@ -18,5 +18,5 @@ export async function distributeToken() {
 
   let signer = await generateAccount(0);
   let accountDetail = await signer.getAccounts();
-  await batchSend(accountDetail[0].address, recipients, "1000000000000000000000");
+  await batchSend(accountDetail[0].address, recipients, "2000000000000000000000");
 }

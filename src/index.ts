@@ -34,9 +34,10 @@ import { queryVoters } from './query-dora-account';
 import { queryQfVoters } from './query-qf-account';
 import { amaciregistrytestround } from './amaciregistrytestaround';
 import { distributeToken } from './distributeToken';
-import { amaciBenchmarkRoundsSyncExecute } from './amaci-test-round-sync';
+import { amaciBenchmarkRoundsSyncExecute } from './amaci-test-round-sync-deactive';
 import { amaciTestRoundAsyncExecute } from './amaci-test-rounds-async';
-
+import { testConfigs } from './test-configs';
+import { amaciBenchmarkRoundsSyncExecuteNoDeactive } from './amaci-test-round-sync-non-deactive';
 type DelegatorData = {
 	id: number;
 	delegator_address: string;
@@ -127,24 +128,30 @@ export async function batchSend(recipients: DelegatorData[]) {
 // }
 
 async function main() {
-	// await amaciusertest(170);
-	// await amaciusertest(2);
-	// await queryFunc();
-	// await amacitest();
-	// await maciindexertest(100);
-	// 
-	// await amaciregistrytestround(1);
-	// await queryVoters();
-	// await queryQfVoters();
+	// const args = process.argv.slice(2);
+	// const testId = args[0] || "small";
+	
+	// if (!testConfigs[testId]) {
+	// 	console.error(`未知的测试ID: ${testId}`);
+	// 	console.error(`可用的测试ID: ${Object.keys(testConfigs).join(", ")}`);
+	// 	return;
+	// }
+	
+	// const config = testConfigs[testId];
+	// console.log(`\n\n========== 开始执行测试: ${testId} ==========\n`);
+	// await amaciBenchmarkRoundsSyncExecute(
+	// 	config.rounds,
+	// 	config.voters,
+	// 	config.period,
+	// 	config.title,
+	// );
+	// console.log(`\n========== 测试完成: ${testId} ==========\n\n`);
 
-	// await distributeToken();
-	// no deactive 2115 3voter
-	// 第一个数字代表一共跑几个round，第二个数字代表一共多少个用户参与vote,第三个数字代表voting_period(mins),第四个数字代表batchSize(异步处理一次处理多少个)
-	await amaciTestRoundAsyncExecute(2, 25, 25, 5);
-	// await amaciBenchmarkRoundsSyncExecute(1, 25, 20);
+	// await amaciBenchmarkRoundsSyncExecuteNoDeactive(1, 625, 2880, "4-2-2-25 only tally 625 voters");
+	await distributeToken();
 }
 
-main();
+main().catch(console.error);
 
 
 // dora18565m0p6epdc6tj86yqnz6rsllqv2uly0edvjzwremkhg2g0yeuq09k3hp -> 25 voters  13min tally

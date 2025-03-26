@@ -125,7 +125,7 @@ async function createAMACIRound(
 		[
 			{
 				denom: 'peaka',
-				amount: '100000000000000000000',
+				amount: '50000000000000000000',
 			},
 		]
 	);
@@ -210,12 +210,35 @@ export async function randomSubmitMsg(
 ) {
 
 	// 给每个项目投5票，一个voter投5个项目，所以是20票
+
+
+	// 4-2-2-25 1p1v    25个option
 	const plan = [
-		[0, 5] as [number, number],
-		[1, 5] as [number, number],
-		[2, 5] as [number, number],
-		[3, 5] as [number, number],
-		[4, 5] as [number, number],
+		[0, 1] as [number, number],
+		[1, 1] as [number, number],
+		[2, 1] as [number, number],
+		[3, 1] as [number, number],
+		[4, 1] as [number, number],
+		[5, 1] as [number, number],
+		[6, 1] as [number, number],
+		[7, 1] as [number, number],
+		[8, 1] as [number, number],
+		[9, 1] as [number, number],
+		[10, 1] as [number, number],
+		[11, 1] as [number, number],
+		[12, 1] as [number, number],
+		[13, 1] as [number, number],
+		[14, 1] as [number, number],
+		[15, 1] as [number, number],
+		[16, 1] as [number, number],
+		[17, 1] as [number, number],
+		[18, 1] as [number, number],
+		[19, 1] as [number, number],
+		[20, 1] as [number, number],
+		[21, 1] as [number, number],
+		[22, 1] as [number, number],
+		[23, 1] as [number, number],
+		[24, 1] as [number, number],
 	];
 
 	const payload = batchGenMessage(stateIdx, maciAccount, coordPubKey, plan);
@@ -249,53 +272,32 @@ export async function randomSubmitMsg(
 	const fee = calculateFee(20000000 * msgs.length, gasPrice);
 	try {
 		const currentHeight = await client.getHeight();
-		const timeoutHeight = BigInt(currentHeight) + BigInt(20); // 假设每个区块5秒,4个区块大约20秒
+		const timeoutHeight = BigInt(currentHeight) + BigInt(4); // 假设每个区块5秒,4个区块大约20秒
 
 		const result = await client.signAndBroadcast(
 			address,
 			msgs,
 			fee,
 			undefined,
-			timeoutHeight,
+			timeoutHeight
 		);
 
 		console.log(stateIdx, `pub_msg hash ${result.transactionHash}`);
 		return result;
 	} catch (err) {
+		// 将 err 类型显式地转换为 Error
 		if (err instanceof Error) {
-			// 处理超时错误
-			if (err.message.includes("was submitted but was not yet found on the chain")) {
-				const txId = (err as any).txId;
-				console.log(`交易已提交但尚未确认，交易ID: ${txId}`);
-				
-				// 等待一段时间
-				console.log("等待10秒后继续...");
-				await delay(10000);
-				
-				// 尝试查询交易状态
-				try {
-					const txResult = await client.getTx(txId);
-					if (txResult) {
-						console.log(`交易已确认: ${txId}`);
-						return txResult;
-					}
-				} catch (verifyErr) {
-					console.log("无法验证交易状态，继续处理");
-				}
-				
-				// 返回一个模拟的成功结果，避免中断流程
-				return {
-					transactionHash: txId,
-					height: "0",
-					code: 0,
-					rawLog: "Transaction submitted but confirmation timed out"
-				};
-			} else if (err.message.includes('You might want to check later. There was a wait of 64 seconds.')) {
+			if (
+				err.message.includes(
+					'You might want to check later. There was a wait of 16 seconds.'
+				)
+			) {
 				console.log(err.message);
 				console.log('skip this error and waiting 16s.');
 				await delay(17000);
 			} else {
 				console.error('Unexpected error', err);
+
 				throw err;
 			}
 		}
@@ -423,47 +425,7 @@ export async function randomSubmitDeactivateMsg(
 }
 
 /**
- * 执行带重试机制的异步操作
- * @param operation 要执行的异步操作
- * @param maxRetries 最大重试次数
- * @param retryDelay 重试间隔(毫秒)
- * @param operationName 操作名称(用于日志)
- */
-async function executeWithRetry<T>(
-	operation: () => Promise<T>,
-	maxRetries: number = 5,
-	retryDelay: number = 5000,
-	operationName: string = "操作"
-): Promise<T> {
-	let retries = 0;
-	
-	while (true) {
-		try {
-			return await operation();
-		} catch (error) {
-			retries++;
-			
-			// 检查是否是网络错误
-			const isNetworkError = error instanceof Error && 
-				(error.message.includes("Bad status on response: 502") || 
-				 error.message.includes("network") ||
-				 error.message.includes("timeout") ||
-				 error.message.includes("connection"));
-			
-			if (retries <= maxRetries && isNetworkError) {
-				console.log(`${operationName}失败(网络错误)，${retries}/${maxRetries}次重试，等待${retryDelay/1000}秒...`);
-				await delay(retryDelay);
-				// 每次重试增加延迟时间
-				retryDelay = Math.min(retryDelay * 1.5, 30000);
-			} else {
-				throw error;
-			}
-		}
-	}
-}
-
-/**
- * 批量测试函数，支持多用户投票（异步版本）
+ * 批量测试函数，支持多用户投票
  * @param creator 创建者钱包
  * @param operator 操作者地址
  * @param voters 用户钱包数组
@@ -483,8 +445,7 @@ async function batch_2115_voter(
 	title: string,
 	skipDeactivate: boolean,
 	circuitType: string,
-    voting_period: number,
-    batchSize: number
+	voting_period: number
 ) {
 	console.log(`当前有 ${voters.length} 个用户参与投票`);
 	
@@ -494,16 +455,11 @@ async function batch_2115_voter(
 		registryContractAddress
 	);
 
-
-	// 为每个用户准备信息
 	const userAddresses: string[] = [];
 	const userClients: SigningCosmWasmClient[] = [];
 	const maciAccounts: Account[] = [];
 	const userStateIndices: number[] = [];
 	
-	// 并行获取用户信息
-	console.log("准备用户信息...");
-	// 顺序获取用户信息，避免nonce问题
 	for (let i = 0; i < voters.length; i++) {
 		const accountDetail = await voters[i].getAccounts();
 		userAddresses.push(accountDetail[0].address);
@@ -511,22 +467,17 @@ async function batch_2115_voter(
 		maciAccounts.push(genKeypair());
 	}
 
-	console.log("用户信息准备完成...");
-
-	// 设置时间
 	const start_voting = new Date();
 	const end_voting_re = new Date(start_voting.getTime() + voting_period * 60 * 1000);
 	console.log(`Current time: ${start_voting.toLocaleTimeString()}`);
 	console.log(`End voting time: ${end_voting_re.toLocaleTimeString()}`);
 
-	// 创建协调者公钥
 	const coordPubKey: PublicKey = [
 		BigInt(operatorPubkey[0]),
 		BigInt(operatorPubkey[1]),
 	];
 	console.log('coordPubKey', coordPubKey);
 
-	// 创建合约
 	let contractAddress = '';
 	while (!contractAddress) {
 		try {
@@ -542,7 +493,7 @@ async function batch_2115_voter(
 				start_voting,
 				end_voting_re,
 				voters.length.toString(), // 最大投票者数量
-				'5',  // 最大选项数量
+				'25',  // 最大选项数量
 				whitelist,
 				circuitType
 			);
@@ -569,164 +520,86 @@ async function batch_2115_voter(
 	}
 
 	try {
-		// 检查初始注册数量
 		let numSignUp = await userMaciClients[0].getNumSignUp();
 		console.log(`Initial sign-ups: ${numSignUp}`);
 		
-		// 用户注册 - 改为异步批量执行
 		console.log("开始用户注册...");
 		const gasPrice = GasPrice.fromString('100000000000peaka');
 		const signUpFee = calculateFee(60000000, gasPrice);
-
-		// 分批注册用户，每批5个用户
-		const signupBatchSize = batchSize;
-		for (let i = 0; i < voters.length; i += signupBatchSize) {
-			const currentBatch = voters.slice(i, Math.min(i + signupBatchSize, voters.length));
-			const batchIndices = Array.from({length: currentBatch.length}, (_, idx) => i + idx);
-			
-			console.log(`处理注册批次 ${Math.floor(i/signupBatchSize) + 1}/${Math.ceil(voters.length/signupBatchSize)}`);
-			
-			// 并行处理当前批次
-			await Promise.all(
-				batchIndices.map(async (userIndex) => {
-					try {
-						await executeWithRetry(
-							async () => {
-								const pubkey = {
-									x: uint256FromDecimalString(maciAccounts[userIndex].pubKey[0].toString()),
-									y: uint256FromDecimalString(maciAccounts[userIndex].pubKey[1].toString()),
-								};
-								
-								const res = await userMaciClients[userIndex].signUp({ pubkey }, signUpFee);
-								console.log(`User${userIndex + 1} signup hash: ${res.transactionHash}`);
-							},
-							3,  // 最多重试3次
-							5000,  // 初始延迟5秒
-							`User${userIndex + 1}注册`
-						);
-					} catch (err) {
-						console.error(`User${userIndex + 1} signup error:`, err);
-					}
-				})
-			);
-			
-			// 每个批次之间增加延迟
-			console.log("等待5s，避免服务器过载...");
-			await delay(5000);
-		}
 		
-		// 等待12s，确保交易被处理
-		console.log("等待12s，确保交易被处理...");
-		await delay(12000);
-		
-		// 获取用户状态索引 - 并行执行
-		console.log("获取用户状态索引...");
-		
-		// 先初始化数组，确保每个用户都有一个位置
-		for (let i = 0; i < voters.length; i++) {
-			userStateIndices[i] = i;  // 默认使用用户索引
-		}
-
-		// 然后尝试获取实际状态索引
 		for (let i = 0; i < voters.length; i++) {
 			try {
+				const pubkey = {
+					x: uint256FromDecimalString(maciAccounts[i].pubKey[0].toString()),
+					y: uint256FromDecimalString(maciAccounts[i].pubKey[1].toString()),
+				};
+				
+				const res = await userMaciClients[i].signUp({ pubkey }, signUpFee);
+				console.log(`User${i + 1} signup hash: ${res.transactionHash}`);
+				
+			} catch (err) {
+				if (err instanceof Error) {
+					if (err.message.includes('You might want to check later. There was a wait of 16 seconds.')) {
+						console.log(`User${i + 1}: skip this error and waiting 17s.`);
+						await delay(17000);
+					} else {
+						console.error(`User${i + 1} signup error:`, err);
+					}
+				}
+			}
+		}
+
+		console.log("等待12s,确保交易被处理...");
+		await delay(12000);
+		
+		console.log("获取用户状态索引...");
+		
+		for (let i = 0; i < voters.length; i++) {
 				const stateIdx = await userMaciClients[i].signuped({
 					pubkeyX: maciAccounts[i].pubKey[0].toString(),
 				});
 				console.log(`User${i + 1} state index: ${stateIdx}`);
-				userStateIndices[i] = Number(stateIdx) - 1;  // 直接赋值，不使用push
-			} catch (err) {
-				console.error(`Failed to get User${i + 1} state index:`, err);
-				// 保持默认值 i
-			}
+				userStateIndices.push(Number(stateIdx) - 1);
 		}
 		
-		// 用户注销 - 并行执行，但分批处理
 		if (!skipDeactivate) {
 			console.log("开始用户注销...");
-			
-			for (let i = 0; i < voters.length; i += batchSize) {
-				const currentBatch = voters.slice(i, Math.min(i + batchSize, voters.length));
-				const batchIndices = Array.from({length: currentBatch.length}, (_, idx) => i + idx);
-				
-				console.log(`处理注销批次 ${Math.floor(i/batchSize) + 1}/${Math.ceil(voters.length/batchSize)}`);
-				
-				// 并行处理当前批次，但每个操作都有自己的重试机制
-				await Promise.all(
-					batchIndices.map(async (userIndex) => {
-						try {
-							await executeWithRetry(
-								async () => {
-									await randomSubmitDeactivateMsg(
-										userMaciClients[userIndex],
-										userStateIndices[userIndex],
-										maciAccounts[userIndex],
-										coordPubKey
-									);
-									console.log(`User${userIndex + 1} deactivated`);
-								},
-								3,
-								5000,
-								`User${userIndex + 1}注销`
-							);
-						} catch (err) {
-							console.error(`User${userIndex + 1} deactivate error:`, err);
-						}
-					})
-				);
-				
-				// 每个批次之间增加延迟
-				console.log("等待5s，避免服务器过载...");
-				await delay(5000);
-			}
-			
-			// 添加短暂延迟，确保交易被处理
-			console.log("等待12s,确保交易被处理...");
-			await delay(12000);
-		}
-		
-		// 用户投票 - 并行执行，但分批处理
-		console.log("开始用户投票...");
-		
-		const VotebatchSize = batchSize;
-		
-		for (let i = 0; i < voters.length; i += VotebatchSize) {
-			const currentBatch = voters.slice(i, Math.min(i + VotebatchSize, voters.length));
-			const batchIndices = Array.from({length: currentBatch.length}, (_, idx) => i + idx);
-			
-			console.log(`处理投票批次 ${Math.floor(i/VotebatchSize) + 1}/${Math.ceil(voters.length/VotebatchSize)}`);
-			console.log(`Current time: ${new Date().toLocaleTimeString()}`);
+			for (let i = 0; i < voters.length; i++) {
+				try {
+					await randomSubmitDeactivateMsg(
+						userMaciClients[i],
+						userStateIndices[i],
+						maciAccounts[i],
+						coordPubKey
+					);
+					console.log(`User${i + 1} deactivated`);
+					
 
-			// 并行处理当前批次，但每个操作都有自己的重试机制
-			await Promise.all(
-				batchIndices.map(async (userIndex) => {
-					try {
-						await executeWithRetry(
-							async () => {
-								await randomSubmitMsg(
-									userClients[userIndex],
-									contractAddress,
-									userAddresses[userIndex],
-									userStateIndices[userIndex],
-									maciAccounts[userIndex],
-									coordPubKey
-								);
-								console.log(`User${userIndex + 1} vote submitted`);
-							},
-							3,
-							5000,
-							`User${userIndex + 1}投票`
-						);
-					} catch (err) {
-						console.error(`User${userIndex + 1} vote error:`, err);
-					}
-				})
-			);
-			
-			console.log(`Current time: ${new Date().toLocaleTimeString()}`);
-			// 每个批次之间增加延迟
-			console.log("等待12s, 避免服务器过载...");
-			await delay(12000);
+				} catch (err) {
+					console.error(`User${i + 1} deactivate error:`, err);
+				}
+			}
+		}
+
+		console.log("等待12s,确保交易被处理...");
+		await delay(12000);
+		
+		console.log("开始用户投票...");
+		for (let i = 0; i < voters.length; i++) {
+			try {
+				await randomSubmitMsg(
+					userClients[i],
+					contractAddress,
+					userAddresses[i],
+					i,
+					maciAccounts[i],
+					coordPubKey
+				);
+				console.log(`User${i + 1} vote submitted`);
+				
+			} catch (err) {
+				console.error(`User${i + 1} vote error:`, err);
+			}
 		}
 		
 		console.log("All user operations completed");
@@ -735,7 +608,6 @@ async function batch_2115_voter(
 		console.error('Error during user operations:', error);
 	}
 
-	await delay(16000);
 	console.log("Test completed");
 }
 
@@ -1519,7 +1391,7 @@ async function batch_42225_voter(
 	await delay(16000);
 }
 
-export async function amaciTestRoundAsyncExecute(roundNum: number, voterNum: number, voting_period: number, batchSize: number) {
+export async function amaciBenchmarkRoundsSyncExecuteNoDeactive(roundNum: number, voterNum: number, voting_period: number, title: string) {
 	let start = 0;
 	let thread = 3 * roundNum - 1; // 3 multi - 1
 	
@@ -1545,9 +1417,10 @@ export async function amaciTestRoundAsyncExecute(roundNum: number, voterNum: num
 		
 		console.log(`---- Start Round: ${Math.floor(i/3) + 1} ----`);
 		
-		let title = '2-1-1-5 1p1v benchmark 25 voter no deactivate [async]';
 		let skipDeactivate = true;
 		let circuitType = '0'; // 1p1v
+
+		console.log('This is non-deactive tests');
 		
 		await batch_2115_voter(
 			creator,
@@ -1558,8 +1431,7 @@ export async function amaciTestRoundAsyncExecute(roundNum: number, voterNum: num
 			title,
 			skipDeactivate,
 			circuitType,
-            voting_period,
-            batchSize
+			voting_period
 		);
 	}
 }

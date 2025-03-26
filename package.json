@@ -7,7 +7,14 @@
 		"restart": "rm -rf progress.json && ts-node --files src/index.ts",
 		"start": "ts-node --files src/index.ts",
 		"test": "ts-node --files src/test.ts",
-		"distribute": "ts-node --files src/distributeToken.ts"
+		"distribute": "ts-node --files src/distributeToken.ts",
+		"deactive": "ts-node --files src/run-deactive-test.ts",
+		"no-deactive": "ts-node --files src/run-non-deactive-test.ts",
+		"test:deactive": "DEACTIVATE=true ts-node --files src/run-test.ts",
+		"test:no-deactive": "DEACTIVATE=false ts-node --files src/run-test.ts",
+		"log:deactive": "cross-env LOG_FILE=deactive.log npm run deactive",
+		"log:no-deactive": "cross-env LOG_FILE=no-deactive.log npm run no-deactive",
+		"log:all": "npm-run-all --sequential log:deactive log:no-deactive"
 	},
 	"dependencies": {
 		"@cosmjs/amino": "^0.32.1",
