@@ -14,7 +14,9 @@
 		"test:no-deactive": "DEACTIVATE=false ts-node --files src/run-test.ts",
 		"log:deactive": "cross-env LOG_FILE=deactive.log npm run deactive",
 		"log:no-deactive": "cross-env LOG_FILE=no-deactive.log npm run no-deactive",
-		"log:all": "npm-run-all --sequential log:deactive log:no-deactive"
+		"log:all": "npm-run-all --sequential log:deactive log:no-deactive",
+		"save-accounts": "ts-node --files src/save-maci-accounts.ts",
+		"test-votes": "ts-node --files src/amaci-test-vote.ts"
 	},
 	"dependencies": {
 		"@cosmjs/amino": "^0.32.1",

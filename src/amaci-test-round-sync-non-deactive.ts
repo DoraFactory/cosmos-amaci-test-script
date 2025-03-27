@@ -453,6 +453,26 @@ async function batch_2115_voter(
 		maciAccounts.push(genKeypair());
 	}
 
+		// 将 maciAccounts 保存到 JSON 文件
+		try {
+			// 确保目录存在
+			const dirPath = path.join(process.cwd(), 'data');
+			await fs.mkdir(dirPath, { recursive: true });
+			
+			// 保存到文件
+			const filePath = path.join(dirPath, 'maci_accounts.json');
+			await fs.writeFile(
+				filePath, 
+				JSON.stringify(maciAccounts, (key, value) => 
+					typeof value === 'bigint' ? value.toString() : value, 
+				2)
+			);
+			
+			console.log(`MACI账户已保存到: ${filePath}`);
+		} catch (err) {
+			console.error('保存MACI账户失败:', err);
+		}
+
 	const start_voting = new Date();
 	const end_voting_re = new Date(start_voting.getTime() + voting_period * 60 * 1000);
 	console.log(`Current time: ${start_voting.toLocaleTimeString()}`);

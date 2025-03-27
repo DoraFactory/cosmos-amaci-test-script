@@ -38,6 +38,8 @@ import { amaciBenchmarkRoundsSyncExecute } from './amaci-test-round-sync-deactiv
 import { amaciTestRoundAsyncExecute } from './amaci-test-rounds-async';
 import { testConfigs } from './test-configs';
 import { amaciBenchmarkRoundsSyncExecuteNoDeactive } from './amaci-test-round-sync-non-deactive';
+import { amaciTestVotes } from './amaci-test-vote';
+
 type DelegatorData = {
 	id: number;
 	delegator_address: string;
@@ -149,6 +151,7 @@ async function main() {
 
 	// await amaciBenchmarkRoundsSyncExecuteNoDeactive(1, 625, 2880, "4-2-2-25 only tally 625 voters");
 	// await distributeToken();
+	// await amaciTestVotes(3);
 }
 
 main().catch(console.error);
