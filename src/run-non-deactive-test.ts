@@ -4,7 +4,7 @@ import { amaciBenchmarkRoundsSyncExecuteNoDeactive } from './amaci-test-round-sy
 const testConfigs = {
     "small": { rounds: 1, voters: 25, period: 20, title: "小规模测试-无注销", deactivate: false },
     "medium": { rounds: 1, voters: 50, period: 30, title: "中规模测试-无注销", deactivate: false },
-    "large": { rounds: 2, voters: 625, period: 2880, title: "4-2-2-25 only tally 625 voters", deactivate: false }
+    "large": { rounds: 1, voters: 625, period: 2880, title: "4-2-2-25 only tally 625 voters", deactivate: false }
 };
 
 async function main() {

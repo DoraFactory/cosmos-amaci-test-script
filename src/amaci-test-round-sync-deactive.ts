@@ -538,13 +538,25 @@ async function batch_2115_voter(
 				const res = await userMaciClients[i].signUp({ pubkey }, signUpFee);
 				console.log(`User${i + 1} signup hash: ${res.transactionHash}`);
 				
+                 // 每个用户操作后添加延迟
+                console.log(`等待 6 秒后处理下一个用户...`);
+                await delay(6000);
 			} catch (err) {
 				if (err instanceof Error) {
 					if (err.message.includes('You might want to check later. There was a wait of 16 seconds.')) {
 						console.log(`User${i + 1}: skip this error and waiting 17s.`);
 						await delay(17000);
+					} else if (err.message.includes('502') || err.message.includes('Bad Gateway')) {
+						console.log(`服务器过载，等待 30 秒后重试...`);
+						await delay(30000);
+						i--; // 重试当前用户
+						continue;
+					} else if (err.message.includes('You might want to check later')) {
+						console.log(`需要等待，延迟 20 秒...`);
+						await delay(20000);
 					} else {
 						console.error(`User${i + 1} signup error:`, err);
+						await delay(5000); // 即使是未知错误也添加延迟
 					}
 				}
 			}
@@ -575,7 +587,8 @@ async function batch_2115_voter(
 					);
 					console.log(`User${i + 1} deactivated`);
 					
-
+				    await delay(6000);
+                    
 				} catch (err) {
 					console.error(`User${i + 1} deactivate error:`, err);
 				}

@@ -210,12 +210,32 @@ export async function randomSubmitMsg(
 ) {
 
 	// 给每个项目投5票，一个voter投5个项目，所以是20票
-	const plan = [
-		[0, 5] as [number, number],
-		[1, 5] as [number, number],
-		[2, 5] as [number, number],
-		[3, 5] as [number, number],
-		[4, 5] as [number, number],
+    const plan = [
+		[0, 1] as [number, number],
+		[1, 1] as [number, number],
+		[2, 1] as [number, number],
+		[3, 1] as [number, number],
+		[4, 1] as [number, number],
+		[5, 1] as [number, number],
+		[6, 1] as [number, number],
+		[7, 1] as [number, number],
+		[8, 1] as [number, number],
+		[9, 1] as [number, number],
+		[10, 1] as [number, number],
+		[11, 1] as [number, number],
+		[12, 1] as [number, number],
+		[13, 1] as [number, number],
+		[14, 1] as [number, number],
+		[15, 1] as [number, number],
+		[16, 1] as [number, number],
+		[17, 1] as [number, number],
+		[18, 1] as [number, number],
+		[19, 1] as [number, number],
+		[20, 1] as [number, number],
+		[21, 1] as [number, number],
+		[22, 1] as [number, number],
+		[23, 1] as [number, number],
+		[24, 1] as [number, number],
 	];
 
 	const payload = batchGenMessage(stateIdx, maciAccount, coordPubKey, plan);
