@@ -585,7 +585,23 @@ async function batch_2115_voter(
 					
 
 				} catch (err) {
-					console.error(`User${i + 1} deactivate error:`, err);
+					if (err instanceof Error) {
+						if (err.message.includes('You might want to check later. There was a wait of 16 seconds.')) {
+							console.log(`User${i + 1}: skip this error and waiting 17s.`);
+							await delay(17000);
+						} else if (err.message.includes('502') || err.message.includes('Bad Gateway')) {
+							console.log(`服务器过载，等待 30 秒后重试...`);
+							await delay(30000);
+							i--; // 重试当前用户
+							continue;
+						} else if (err.message.includes('You might want to check later')) {
+							console.log(`需要等待，延迟 20 秒...`);
+							await delay(20000);
+						} else {
+							console.error(`User${i + 1} signup error:`, err);
+							await delay(5000); // 即使是未知错误也添加延迟
+						}
+					}
 				}
 			}
 		}
@@ -608,7 +624,23 @@ async function batch_2115_voter(
 
 				await delay(6000);
 			} catch (err) {
-				console.error(`User${i + 1} vote error:`, err);
+				if (err instanceof Error) {
+					if (err.message.includes('You might want to check later. There was a wait of 16 seconds.')) {
+						console.log(`User${i + 1}: skip this error and waiting 17s.`);
+						await delay(17000);
+					} else if (err.message.includes('502') || err.message.includes('Bad Gateway')) {
+						console.log(`服务器过载，等待 30 秒后重试...`);
+						await delay(30000);
+						i--; // 重试当前用户
+						continue;
+					} else if (err.message.includes('You might want to check later')) {
+						console.log(`需要等待，延迟 20 秒...`);
+						await delay(20000);
+					} else {
+						console.error(`User${i + 1} signup error:`, err);
+						await delay(5000); // 即使是未知错误也添加延迟
+					}
+				}
 			}
 		}
 		
