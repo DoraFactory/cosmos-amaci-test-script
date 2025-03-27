@@ -224,21 +224,7 @@ export async function randomSubmitMsg(
 		[7, 1] as [number, number],
 		[8, 1] as [number, number],
 		[9, 1] as [number, number],
-		[10, 1] as [number, number],
-		[11, 1] as [number, number],
-		[12, 1] as [number, number],
-		[13, 1] as [number, number],
-		[14, 1] as [number, number],
-		[15, 1] as [number, number],
-		[16, 1] as [number, number],
-		[17, 1] as [number, number],
-		[18, 1] as [number, number],
-		[19, 1] as [number, number],
-		[20, 1] as [number, number],
-		[21, 1] as [number, number],
-		[22, 1] as [number, number],
-		[23, 1] as [number, number],
-		[24, 1] as [number, number],
+		[10, 1] as [number, number]
 	];
 
 	const payload = batchGenMessage(stateIdx, maciAccount, coordPubKey, plan);
