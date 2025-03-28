@@ -224,7 +224,10 @@ export async function randomSubmitMsg(
 		[7, 1] as [number, number],
 		[8, 1] as [number, number],
 		[9, 1] as [number, number],
-		[10, 1] as [number, number]
+		[10, 1] as [number, number],
+		[11, 1] as [number, number],
+		[12, 1] as [number, number],
+		[14, 1] as [number, number],
 	];
 
 	const payload = batchGenMessage(stateIdx, maciAccount, coordPubKey, plan);
@@ -434,38 +437,39 @@ async function batch_2115_voter(
 		creator,
 		registryContractAddress
 	);
+	let contractAddress = 'dora1rxl2nf29frwfvum4wnenkc3e3gx9amfjrw9w8g0pkzsnuvqnnftqyzwc6n';
 
 	const userAddresses: string[] = [];
 	const userClients: SigningCosmWasmClient[] = [];
-	const maciAccounts: Account[] = [];
+	// const maciAccounts: Account[] = [];
+	const maciAccounts = await loadMaciAccounts(contractAddress);
 	const userStateIndices: number[] = [];
 	
 	for (let i = 0; i < voters.length; i++) {
 		const accountDetail = await voters[i].getAccounts();
 		userAddresses.push(accountDetail[0].address);
 		userClients.push(await getContractClientByWallet(voters[i]));
-		maciAccounts.push(genKeypair());
 	}
 
 	// 将 maciAccounts 保存到 JSON 文件
-	try {
-		// 确保目录存在
-		const dirPath = path.join(process.cwd(), 'data');
-		await fs.mkdir(dirPath, { recursive: true });
+	// try {
+	// 	// 确保目录存在
+	// 	const dirPath = path.join(process.cwd(), 'data');
+	// 	await fs.mkdir(dirPath, { recursive: true });
 		
-		// 保存到文件
-		const filePath = path.join(dirPath, 'maci_accounts.json');
-		await fs.writeFile(
-			filePath, 
-			JSON.stringify(maciAccounts, (key, value) => 
-				typeof value === 'bigint' ? value.toString() : value, 
-			2)
-		);
+	// 	// 保存到文件
+	// 	const filePath = path.join(dirPath, 'maci_accounts.json');
+	// 	await fs.writeFile(
+	// 		filePath, 
+	// 		JSON.stringify(maciAccounts, (key, value) => 
+	// 			typeof value === 'bigint' ? value.toString() : value, 
+	// 		2)
+	// 	);
 		
-		console.log(`MACI账户已保存到: ${filePath}`);
-	} catch (err) {
-		console.error('保存MACI账户失败:', err);
-	}
+	// 	console.log(`MACI账户已保存到: ${filePath}`);
+	// } catch (err) {
+	// 	console.error('保存MACI账户失败:', err);
+	// }
 
 	const coordPubKey: PublicKey = [
 		BigInt(operatorPubkey[0]),
@@ -473,7 +477,6 @@ async function batch_2115_voter(
 	];
 	console.log('coordPubKey', coordPubKey);
 
-	let contractAddress = 'dora1h0mukvnmd5xgtr4rhmq6pdac4rcg6frtd6dpa2p39nfp0g880wussmj45d';
 
 	await delay(16000);
 	
@@ -499,7 +502,7 @@ async function batch_2115_voter(
 
 		
 		console.log("开始用户投票...");
-		for (let i = 0; i < voters.length; i++) {
+		for (let i = 2; i < voters.length; i++) {
 			try {
 				await randomSubmitMsg(
 					userClients[i],
@@ -576,8 +579,8 @@ export async function amaciTestVotes(voterNum: number) {
 /**
  * 从JSON文件加载MACI账户
  */
-async function loadMaciAccounts(): Promise<Account[]> {
-	const filePath = path.join(process.cwd(), 'data', 'maci_accounts.json');
+async function loadMaciAccounts(contractAddress: string): Promise<Account[]> {
+	const filePath = path.join(process.cwd(), 'data', contractAddress + '-maci_accounts.json');
 	
 	try {
 		const data = await fs.readFile(filePath, 'utf-8');
