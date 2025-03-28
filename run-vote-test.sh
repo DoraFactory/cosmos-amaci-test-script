@@ -27,14 +27,14 @@ PID_FILE="logs/vote-test-${VOTER_COUNT}_${TIMESTAMP}.pid"
 
 # 记录开始时间和命令
 echo "=== 执行开始: $(date) ===" > $LOG_FILE
-echo "命令: npm run test-votes $VOTER_COUNT" >> $LOG_FILE
+echo "命令: npm run test-votes -- $VOTER_COUNT" >> $LOG_FILE
 echo "===========================" >> $LOG_FILE
 echo "" >> $LOG_FILE
 
 # 根据是否后台运行执行不同操作
 if [ "$BACKGROUND" = true ]; then
     # 在后台执行命令并记录输出
-    nohup npm run test-votes "$VOTER_COUNT" >> $LOG_FILE 2>&1 &
+    nohup npm run test-votes -- "$VOTER_COUNT" >> $LOG_FILE 2>&1 &
     PID=$!
     echo $PID > $PID_FILE
     echo "命令在后台运行，PID: $PID"
@@ -42,7 +42,7 @@ if [ "$BACKGROUND" = true ]; then
     echo "PID保存到: $PID_FILE"
 else
     # 在前台执行命令并记录输出
-    npm run test-votes "$VOTER_COUNT" 2>&1 | tee -a $LOG_FILE
+    npm run test-votes -- "$VOTER_COUNT" 2>&1 | tee -a $LOG_FILE
     
     # 记录结束时间
     echo "" >> $LOG_FILE

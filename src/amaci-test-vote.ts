@@ -546,7 +546,13 @@ async function batch_2115_voter(
 }
 
 
-export async function amaciTestVotes(voterNum: number) {
+export async function amaciTestVotes(voterNum: number = 3) {
+	// 如果直接运行此文件，从命令行获取参数
+	if (require.main === module) {
+		const args = process.argv.slice(2);
+		voterNum = parseInt(args[0] || "2", 10);
+		console.log(`从命令行获取参数: ${voterNum} 个用户`);
+	}
 	
 	// 创建用户钱包
 	const allVoters: DirectSecp256k1HdWallet[] = [];
@@ -574,6 +580,11 @@ export async function amaciTestVotes(voterNum: number) {
 			allVoters,
 			operatorList[0].pubkey,
 		);
+}
+
+// 如果直接运行此文件，则执行 amaciTestVotes
+if (require.main === module) {
+	amaciTestVotes().catch(console.error);
 }
 
 /**
